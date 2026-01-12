@@ -3,163 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fashion Store - Live</title>
+    <title>Fashion Store - Home</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* ОПРАВЯНЕ НА БЪГА С БАДЖА ОТ ПРЕДИ */
-        .product-card { position: relative !important; }
+        /* Стилове само за Началната страница */
+        .hero-section {
+            height: 85vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1523396884775-65aa46cdcf03?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+        }
+        .hero-content h1 {
+            font-size: 60px; text-transform: uppercase; color: white; margin-bottom: 10px;
+            letter-spacing: 5px; text-shadow: 0 0 20px rgba(208, 0, 255, 0.6);
+        }
+        .hero-content h1 span { color: #d000ff; }
+        .hero-content p { font-size: 20px; color: #ddd; margin-bottom: 30px; letter-spacing: 2px; }
         
-        /* --- СТИЛОВЕ ЗА АДМИН ПАНЕЛА --- */
-        #admin-panel {
-            display: none; background-color: #1e1e1e; border: 1px solid #d000ff;
-            padding: 25px; margin: 30px auto; max-width: 900px; border-radius: 12px;
-            box-shadow: 0 0 20px rgba(208, 0, 255, 0.1);
+        .hero-btn {
+            padding: 15px 40px; background-color: transparent; border: 2px solid #d000ff;
+            color: #d000ff; font-size: 18px; font-weight: bold; text-transform: uppercase;
+            cursor: pointer; transition: 0.3s; border-radius: 50px; text-decoration: none; display: inline-block;
         }
-        #admin-panel h3 { color: #d000ff; margin-top: 0; text-transform: uppercase; }
-        .admin-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-        .admin-form input, .admin-form select, .admin-form textarea {
-            padding: 10px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 5px; width: 100%; box-sizing: border-box;
-        }
-        .admin-form textarea { grid-column: span 2; height: 80px; resize: vertical; }
-
-        .delete-btn {
-            background-color: #ff4444; color: white; border: none; padding: 8px;
-            margin-top: 10px; cursor: pointer; border-radius: 5px; width: 100%; font-weight: bold;
-        }
-        .qty-badge {
-            background: #d000ff; color: white; padding: 4px 10px; 
-            border-radius: 20px; font-size: 12px; font-weight: bold;
-            position: absolute; top: 15px; right: 15px; z-index: 10;
+        .hero-btn:hover {
+            background-color: #d000ff; color: white; box-shadow: 0 0 30px #d000ff; transform: scale(1.05);
         }
 
+        .features-bar {
+            display: flex; justify-content: space-around; padding: 40px 20px;
+            background-color: #1a1a1a; border-bottom: 1px solid #333; flex-wrap: wrap;
+        }
+        .feature-item { text-align: center; color: white; max-width: 300px; margin: 10px; }
+        .feature-item i { font-size: 30px; color: #d000ff; margin-bottom: 15px; }
         #user-info { font-size: 14px; color: #aaa; margin-right: 15px; }
-
-        /* --- НОВИЯТ ПРОЗОРЕЦ ЗА ПРОДУКТ (DETAIL MODAL) --- */
-        .product-modal {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.85); /* По-тъмен фон */
-            backdrop-filter: blur(5px);
-        }
-        .pm-content {
-            background-color: #1a1a1a; margin: 5% auto; padding: 0; 
-            border: 1px solid #333; width: 90%; max-width: 900px; 
-            border-radius: 12px; display: flex; overflow: hidden; position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
-        .pm-close {
-            position: absolute; top: 15px; right: 20px; color: white; 
-            font-size: 30px; cursor: pointer; z-index: 100;
-        }
-        
-        /* Разделяне на две части: Снимка и Инфо */
-        .pm-left { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; }
-        .pm-left img { width: 100%; height: 100%; object-fit: cover; max-height: 500px; }
-        
-        .pm-right { flex: 1; padding: 40px; color: white; display: flex; flex-direction: column; justify-content: center; }
-        .pm-title { font-size: 32px; margin: 0 0 10px 0; color: #fff; }
-        .pm-price { font-size: 24px; color: #d000ff; font-weight: bold; margin-bottom: 20px; }
-        .pm-desc { color: #ccc; line-height: 1.6; margin-bottom: 30px; font-size: 16px; }
-        
-        /* Селектор за размер */
-        .size-selector { margin-bottom: 30px; }
-        .size-selector label { display: block; margin-bottom: 10px; font-weight: bold; }
-        .size-selector select {
-            width: 100%; padding: 15px; background: #333; color: white; 
-            border: 1px solid #555; border-radius: 8px; font-size: 16px; cursor: pointer;
-        }
-
-        .pm-buy-btn {
-            background-color: #28a745; color: white; border: none; padding: 15px; 
-            font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s;
-        }
-        .pm-buy-btn:hover { background-color: #218838; }
-
-        /* Мобилна версия за прозореца */
-        @media (max-width: 768px) {
-            .pm-content { flex-direction: column; height: 90vh; overflow-y: scroll; margin: 5% auto; }
-            .pm-left img { max-height: 300px; }
-            .pm-right { padding: 20px; }
-        }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">FashionStore <span id="admin-badge" style="font-size:12px; color:#d000ff; display:none; border:1px solid #d000ff; padding:2px 5px; border-radius:4px;">ADMIN</span></div>
+        <div class="logo">FashionStore</div>
         <div class="nav-links">
             <span id="user-info">...</span>
-            <a onclick="alert('Отвори кошницата')" class="cart-link" style="cursor: pointer;">🛒 Количка</a>
+            <a href="shop.html" style="color: #d000ff; font-weight: bold;">МАГАЗИН</a>
             <a href="#" id="logout-btn">Изход</a>
         </div>
     </header>
 
-    <div id="admin-panel">
-        <h3>⚡ Админ Панел</h3>
-        <div class="admin-form">
-            <input type="text" id="new-title" placeholder="Име на продукта">
-            <input type="number" id="new-price" placeholder="Цена (лв.)">
-            <input type="number" id="new-qty" placeholder="Бройки">
-            <select id="new-cat">
-                <option value="tshirt">Тениска</option>
-                <option value="pants">Панталони</option>
-                <option value="jeans">Дънки</option>
-                <option value="hoodie">Суитчър</option>
-            </select>
-            <input type="text" id="new-img" placeholder="Снимка (URL или images/...)">
-            <textarea id="new-desc" placeholder="Описание на продукта (материя, кройка...)" style="grid-column: span 2;"></textarea>
-            
-            <button id="add-btn" style="background-color: #28a745; color: white; border: none; padding: 10px; cursor: pointer; font-weight:bold; border-radius:5px; grid-column: span 2;">+ ДОБАВИ ПРОДУКТ</button>
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>NEW ERA OF <br> <span>STREETWEAR</span></h1>
+            <p>Premium quality. Unique designs. Limited drops.</p>
+            <a href="shop.html" class="hero-btn">SHOP COLLECTION</a>
         </div>
-    </div>
+    </section>
 
-    <div class="categories">
-        <button class="cat-btn active" onclick="filterLocal('all', this)">Всички</button>
-        <button class="cat-btn" onclick="filterLocal('tshirt', this)">Тениски</button>
-        <button class="cat-btn" onclick="filterLocal('pants', this)">Панталони</button>
-        <button class="cat-btn" onclick="filterLocal('hoodie', this)">Суитчъри</button>
-    </div>
-
-    <div class="products-grid" id="products-container">
-        <p style="text-align:center; width:100%; margin-top:50px;">🔄 Зареждане...</p>
-    </div>
-
-    <div id="productModal" class="product-modal">
-        <div class="pm-content">
-            <span class="pm-close" onclick="closeProductModal()">&times;</span>
-            
-            <div class="pm-left">
-                <img id="pm-img" src="" alt="Product">
-            </div>
-
-            <div class="pm-right">
-                <h2 id="pm-title" class="pm-title">Title</h2>
-                <div id="pm-price" class="pm-price">0.00 лв.</div>
-                
-                <p id="pm-desc" class="pm-desc">
-                    Няма описание за този продукт.
-                </p>
-
-                <div class="size-selector">
-                    <label>Избери Размер:</label>
-                    <select id="size-select">
-                        <option value="S">Small (S)</option>
-                        <option value="M" selected>Medium (M)</option>
-                        <option value="L">Large (L)</option>
-                        <option value="XL">Extra Large (XL)</option>
-                    </select>
-                </div>
-
-                <button class="pm-buy-btn" onclick="addToCartFromModal()">ДОБАВИ В КОЛИЧКАТА</button>
-            </div>
-        </div>
+    <div class="features-bar">
+        <div class="feature-item"><i class="fas fa-shipping-fast"></i><h4>Бърза Доставка</h4><p>Доставяме до 24 часа.</p></div>
+        <div class="feature-item"><i class="fas fa-tshirt"></i><h4>Високо Качество</h4><p>100% Памук и премиум материи.</p></div>
+        <div class="feature-item"><i class="fas fa-undo"></i><h4>Лесно Връщане</h4><p>Преглед и тест преди плащане.</p></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // Твоята конфигурация
         const firebaseConfig = {
             apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0",
             authDomain: "magazine-9e774.firebaseapp.com",
@@ -171,166 +79,18 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
-        const ADMIN_EMAIL = "admin@fashion.com";
 
-        let allProducts = []; 
-        let currentUser = null;
-        let currentOpenProduct = null; // Пазим кой продукт е отворен в момента
-        
-        const container = document.getElementById('products-container');
-
-        // --- AUTH CHECK ---
+        // Проверка дали е влязъл (само за хедъра)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUser = user;
                 document.getElementById('user-info').innerText = user.email;
-                if(user.email === ADMIN_EMAIL) {
-                    document.getElementById('admin-panel').style.display = 'block';
-                    document.getElementById('admin-badge').style.display = 'inline-block';
-                }
-                loadProducts();
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // --- LOAD PRODUCTS ---
-        async function loadProducts() {
-            container.innerHTML = '';
-            allProducts = []; 
-            try {
-                const querySnapshot = await getDocs(collection(db, "products"));
-                querySnapshot.forEach((doc) => {
-                    let data = doc.data();
-                    data.id = doc.id;
-                    allProducts.push(data);
-                });
-                renderProducts(allProducts);
-            } catch (error) { console.error(error); }
-        }
-
-        // --- RENDER PRODUCTS ---
-        function renderProducts(list) {
-            container.innerHTML = '';
-            list.forEach((product) => {
-                let deleteBtn = '';
-                if (currentUser && currentUser.email === ADMIN_EMAIL) {
-                    deleteBtn = `<button class="delete-btn" data-id="${product.id}">🗑 ИЗТРИЙ</button>`;
-                }
-
-                // Записваме целия обект product като стринг в бутона, за да го прочетем после
-                // ВНИМАНИЕ: Това е трик, за да подадем данните към функцията openProductModal
-                
-                const html = `
-                    <div class="product-card" data-category="${product.category}">
-                        <div class="qty-badge">Налично: ${product.qty}</div>
-                        <img src="${product.img}" class="product-image" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
-                        <h3 class="product-title" style="color:black!important;">${product.title}</h3>
-                        <span class="product-price" style="color:red; font-weight:bold;">${product.price} лв.</span>
-                        
-                        <button class="view-btn open-modal-btn" data-id="${product.id}">Виж Опции</button>
-                        
-                        ${deleteBtn}
-                    </div>
-                `;
-                container.innerHTML += html;
-            });
-
-            // Закачаме слушатели за бутоните "Виж Опции"
-            document.querySelectorAll('.open-modal-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = e.target.getAttribute('data-id');
-                    const product = allProducts.find(p => p.id === id);
-                    openProductModal(product);
-                });
-            });
-
-            // Закачаме слушатели за бутоните "Изтрий" (Админ)
-            if (currentUser && currentUser.email === ADMIN_EMAIL) {
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const id = e.target.getAttribute('data-id');
-                        if(confirm("Изтриване завинаги?")) {
-                            await deleteDoc(doc(db, "products", id));
-                            loadProducts();
-                        }
-                    });
-                });
-            }
-        }
-
-        // --- ADD PRODUCT (ADMIN) ---
-        document.getElementById('add-btn').addEventListener('click', async () => {
-            const title = document.getElementById('new-title').value;
-            const price = document.getElementById('new-price').value;
-            const qty = document.getElementById('new-qty').value;
-            const cat = document.getElementById('new-cat').value;
-            const img = document.getElementById('new-img').value;
-            const desc = document.getElementById('new-desc').value; // Взимаме и описанието
-
-            if (title && price) {
-                try {
-                    await addDoc(collection(db, "products"), {
-                        title, price, qty, category: cat, img, 
-                        description: desc || "Няма добавено описание." // Ако е празно, слагаме текст по подразбиране
-                    });
-                    alert("✅ Успешно добавено!");
-                    // Чистим формата
-                    document.getElementById('new-title').value = '';
-                    document.getElementById('new-desc').value = ''; 
-                    loadProducts();
-                } catch (e) { alert("Грешка при качване!"); }
-            } else { alert("Въведи име и цена!"); }
-        });
-
-        // --- ФУНКЦИИ ЗА МОДАЛНИЯ ПРОЗОРЕЦ (Глобални) ---
-        
-        // 1. Отваряне на прозореца и пълнене с данни
-        window.openProductModal = function(product) {
-            currentOpenProduct = product; // Запомняме кой е отворен
-            
-            // Пълним HTML-а с данните на продукта
-            document.getElementById('pm-img').src = product.img;
-            document.getElementById('pm-title').innerText = product.title;
-            document.getElementById('pm-price').innerText = product.price + " лв.";
-            document.getElementById('pm-desc').innerText = product.description || "Няма описание за този продукт.";
-            
-            // Показваме прозореца
-            document.getElementById('productModal').style.display = "block";
-        }
-
-        // 2. Затваряне
-        window.closeProductModal = function() {
-            document.getElementById('productModal').style.display = "none";
-        }
-
-        // 3. Добавяне в количката от модала
-        window.addToCartFromModal = function() {
-            const size = document.getElementById('size-select').value;
-            alert(`Добавихте "${currentOpenProduct.title}" (Размер: ${size}) в количката!`);
-            closeProductModal();
-        }
-
-        // Затваряне при клик извън прозореца
-        window.onclick = function(event) {
-            const modal = document.getElementById('productModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        // Logout & Filter Helpers
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
-        
-        window.filterLocal = function(category, btn) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if (category === 'all') renderProducts(allProducts);
-            else renderProducts(allProducts.filter(p => p.category === category));
-        }
-
     </script>
 </body>
 </html>
