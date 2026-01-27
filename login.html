@@ -112,13 +112,29 @@
                     // --- ВХОД ---
                     await signInWithEmailAndPassword(auth, email, password);
                     // Успешен вход -> отиваме на началната страница
-                    window.location.href = "index.html"; 
+                    const returnUrl = localStorage.getItem('returnTo');
+
+                    if (returnUrl) {
+                        localStorage.removeItem('returnTo'); // Изтриваме, за да не се помни вечно
+                        window.location.href = returnUrl;    // Отиваме към checkout.html
+                    } else {
+                     window.location.href = "index.html"; // Стандартно отиваме в началото
+                    }
+                    } else {
+                // --- РЕГИСТРАЦИЯ ---
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Регистрацията успешна! Добре дошъл.");
+                
+                // --- СЛОЖИ ГО И ТУК ---
+                const returnUrl = localStorage.getItem('returnTo');
+                if (returnUrl) {
+                    localStorage.removeItem('returnTo');
+                    window.location.href = returnUrl;
                 } else {
-                    // --- РЕГИСТРАЦИЯ ---
-                    await createUserWithEmailAndPassword(auth, email, password);
-                    alert("Регистрацията успешна! Добре дошъл.");
                     window.location.href = "index.html";
                 }
+            }
+
             } catch (error) {
                 console.error(error);
                 let msg = "Грешка!";
