@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Завършване на поръчката</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background-color: #121212; color: #f0f0f0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .checkout-container {
+            background-color: #1e1e1e; padding: 40px; border-radius: 12px;
+            width: 100%; max-width: 500px; border: 1px solid #333; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        h2 { color: #d000ff; text-align: center; text-transform: uppercase; margin-bottom: 30px; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
+        input, textarea {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background-color: #2c2c2c; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box;
+        }
+        input:focus { border-color: #d000ff; outline: none; }
+        
+        .order-summary { background: #121212; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #333; }
+        .total-price { color: #d000ff; font-weight: bold; font-size: 18px; float: right; }
+
+        .submit-btn {
+            width: 100%; padding: 15px; background-color: #28a745; color: white;
+            border: none; font-weight: bold; font-size: 18px; cursor: pointer; border-radius: 5px; transition: 0.3s;
+        }
+        .submit-btn:hover { background-color: #218838; }
+        
+        .back-link { display: block; text-align: center; margin-top: 15px; color: #888; text-decoration: none; }
+        .back-link:hover { color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="checkout-container">
+        <h2>Данни за доставка 🚚</h2>
+        
+        <div class="order-summary">
+            Продукти: <span id="item-count">0</span> бр.
+            <span class="total-price" id="total-price">0.00 лв.</span>
+        </div>
+
+        <form id="checkout-form">
+            <label>Две имена</label>
+            <input type="text" id="name" placeholder="Иван Петров" required>
+
+            <label>Телефон</label>
+            <input type="tel" id="phone" placeholder="0888 123 456" required>
+
+            <label>Държава</label>
+            <input type="text" id="country" value="България" required>
+
+            <label>Град / Село</label>
+            <input type="text" id="city" placeholder="София" required>
+
+            <label>Адрес за доставка (Еконт/Спиди или точен адрес)</label>
+            <textarea id="address" rows="3" placeholder="Офис Еконт - Център..." style="width:100%; background:#2c2c2c; color:white; border:1px solid #444; border-radius:5px; padding:10px;" required></textarea>
+
+            <button type="submit" class="submit-btn" id="finish-btn">ЗАВЪРШИ ПОРЪЧКАТА</button>
+        </form>
+
+        <a href="shop.html" class="back-link">← Обратно към магазина</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b", measurementId: "G-Z44LH253C4" };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentUser = null;
+        let cart = JSON.parse(localStorage.getItem('myShoppingCart')) || [];
+
+        // 1. Проверка: Ако няма продукти, връщаме го назад
+        if (cart.length === 0) {
+            alert("Количката е празна!");
+            window.location.href = "shop.html";
+        }
+
+        // 2. Смятаме тотала
+        let total = 0;
+        cart.forEach(item => total += item.price);
+        document.getElementById('item-count').innerText = cart.length;
+        document.getElementById('total-price').innerText = total.toFixed(2) + " лв.";
+
+        // 3. Проверка за потребител
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                // Ако не е логнат, пращаме го на логин, но ЗАПАЗВАМЕ, че иска да дойде тук
+                localStorage.setItem('returnTo', 'checkout.html');
+                window.location.href = "login.html";
+            }
+        });
+
+        // 4. Завършване на поръчката
+        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('finish-btn');
+            btn.innerText = "Обработване...";
+            btn.disabled = true;
+
+            const orderData = {
+                userEmail: currentUser.email,
+                userId: currentUser.uid,
+                recipient: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                location: `${document.getElementById('country').value}, ${document.getElementById('city').value}`,
+                address: document.getElementById('address').value,
+                items: cart,
+                totalPrice: total,
+                status: "new", // Статус на поръчката
+                createdAt: serverTimestamp() // Време на поръчката
+            };
+
+            try {
+                // Записваме поръчката в нова колекция "orders"
+                await addDoc(collection(db, "orders"), orderData);
+                
+                alert("✅ ПОРЪЧКАТА Е УСПЕШНА!\nЩе се свържем с вас за потвърждение.");
+                
+                // Изчистваме количката
+                localStorage.removeItem('myShoppingCart');
+                window.location.href = "shop.html"; // Връщаме го в магазина
+                
+            } catch (error) {
+                console.error(error);
+                alert("Грешка при поръчката. Опитайте пак.");
+                btn.innerText = "ЗАВЪРШИ ПОРЪЧКАТА";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
