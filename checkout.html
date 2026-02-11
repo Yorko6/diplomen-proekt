@@ -58,7 +58,7 @@
         
         <div class="order-summary">
             Продукти: <span id="item-count">0</span> бр.
-            <span class="total-price" id="total-price">0.00 лв.</span>
+            <span class="total-price" id="total-price">0.00 €</span>
         </div>
 
         <form id="checkout-form">
@@ -115,7 +115,7 @@
         let total = 0;
         cart.forEach(item => total += item.price);
         document.getElementById('item-count').innerText = cart.length;
-        document.getElementById('total-price').innerText = total.toFixed(2) + " лв.";
+        document.getElementById('total-price').innerText = total.toFixed(2) + " €";
 
         // 3. Проверка за потребител
         onAuthStateChanged(auth, (user) => {

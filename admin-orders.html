@@ -113,7 +113,7 @@
                         itemsHtml += `
                             <div class="item-row">
                                 <span>${item.title} (Размер: ${item.size})</span>
-                                <span>${item.price} лв.</span>
+                                <span>${item.price} €</span>
                             </div>`;
                     });
 
@@ -136,7 +136,7 @@
                                 ${itemsHtml}
                             </div>
 
-                            <div class="total-row">ОБЩО: ${order.totalPrice.toFixed(2)} лв.</div>
+                            <div class="total-row">ОБЩО: ${order.totalPrice.toFixed(2)} €</div>
 
                             <button onclick="deleteOrder('${orderId}')" class="action-btn delete-btn">✅ ИЗПЪЛНЕНА / ИЗТРИЙ</button>
                         </div>
