@@ -80,7 +80,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // Твоята конфигурация
         const firebaseConfig = {
             apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0",
             authDomain: "magazine-9e774.firebaseapp.com",
@@ -121,7 +120,7 @@
             const password = document.getElementById('password').value;
             errorText.style.display = 'none';
 
-            if(!email || !password) {z  
+            if(!email || !password) {
                 showError("Моля попълнете всички полета");
                 return;
             }
@@ -130,30 +129,13 @@
                 if (isLoginMode) {
                     // --- ВХОД ---
                     await signInWithEmailAndPassword(auth, email, password);
-                    // Успешен вход -> отиваме на началната страница
-                    const returnUrl = localStorage.getItem('returnTo');
-
-                    if (returnUrl) {
-                        localStorage.removeItem('returnTo'); // Изтриваме, за да не се помни вечно
-                        window.location.href = returnUrl;    // Отиваме към checkout.html
-                    } else {
-                     window.location.href = "index.html"; // Стандартно отиваме в началото
-                    }
-                    } else {
-                // --- РЕГИСТРАЦИЯ ---
-                await createUserWithEmailAndPassword(auth, email, password);
-                alert("Регистрацията успешна! Добре дошъл.");
-                
-                // --- СЛОЖИ ГО И ТУК ---
-                const returnUrl = localStorage.getItem('returnTo');
-                if (returnUrl) {
-                    localStorage.removeItem('returnTo');
-                    window.location.href = returnUrl;
+                    window.location.href = "index.html"; // Успешен вход -> към сайта
                 } else {
+                    // --- РЕГИСТРАЦИЯ ---
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    alert("Регистрацията успешна! Добре дошъл.");
                     window.location.href = "index.html";
                 }
-            }
-
             } catch (error) {
                 console.error(error);
                 let msg = "Грешка!";
@@ -170,4 +152,8 @@
         }
     </script>
 </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> 800b57c7886d3a6db1fdd1b1a9b4d85f37a3ccb5

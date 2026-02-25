@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* --- СТИЛОВЕ ЗА НАЧАЛНАТА СТРАНИЦА --- */
+        /* Стилове само за Началната страница */
         .hero-section {
             height: 85vh;
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1523396884775-65aa46cdcf03?q=80&w=1920&auto=format&fit=crop');
@@ -37,40 +37,16 @@
         .feature-item { text-align: center; color: white; max-width: 300px; margin: 10px; }
         .feature-item i { font-size: 30px; color: #d000ff; margin-bottom: 15px; }
         #user-info { font-size: 14px; color: #aaa; margin-right: 15px; }
-
-        /* --- НОВИЯТ ДИЗАЙН ЗА БУТОНА ВХОД/ИЗХОД --- */
-        .auth-btn-styled {
-            background-color: #d000ff; /* Лилав фон */
-            color: white !important;
-            padding: 10px 25px;       /* Повече място около текста */
-            border-radius: 25px;      /* Заоблени краища */
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 14px;
-            text-transform: uppercase;
-            border: 2px solid #d000ff;
-            transition: 0.3s;
-            margin-left: 10px;
-            box-shadow: 0 0 10px rgba(208, 0, 255, 0.3); /* Леко сияние */
-        }
-
-        .auth-btn-styled:hover {
-            background-color: transparent; /* Става прозрачен при мишка */
-            color: #d000ff !important;     /* Текстът става лилав */
-            box-shadow: 0 0 20px #d000ff;  /* Сиянието се засилва */
-        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo">FashionStore</div>
-        <div class="nav-links" style="display: flex; align-items: center;">
-            <span id="user-info">Гост</span>
-            
-            <a href="shop.html" style="color: white; font-weight: bold; margin-right: 15px; text-decoration: none;">МАГАЗИН</a>
-            
-            <a href="login.html" id="auth-btn" class="auth-btn-styled">ВХОД</a>
+        <div class="nav-links">
+            <span id="user-info">...</span>
+            <a href="shop.html" style="color: #d000ff; font-weight: bold;">МАГАЗИН</a>
+            <a href="#" id="logout-btn">Изход</a>
         </div>
     </header>
 
@@ -104,30 +80,17 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const authBtn = document.getElementById('auth-btn');
 
+        // Проверка дали е влязъл (само за хедъра)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // АКО СИ ВЛЯЗЪЛ
                 document.getElementById('user-info').innerText = user.email;
-                
-                authBtn.innerText = "ИЗХОД";
-                authBtn.href = "#"; // Махаме линка, за да не презарежда
-                
-                // При клик се отписваш
-                authBtn.onclick = (e) => {
-                    e.preventDefault(); // Спираме стандартното действие на линка
-                    signOut(auth).then(() => window.location.reload());
-                };
             } else {
-                // АКО СИ ГОСТ
-                document.getElementById('user-info').innerText = "Гост";
-                
-                authBtn.innerText = "ВХОД";
-                authBtn.href = "login.html"; // Връщаме линка към логин страницата
-                authBtn.onclick = null; // Махаме JS функцията
+                window.location.href = "login.html";
             }
         });
+
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
     </script>
 </body>
 </html>
