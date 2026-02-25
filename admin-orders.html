@@ -3,158 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Управление на Поръчки</title>
+    <title>Админ Панел - Поръчки</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <style>
-        body { background-color: #121212; color: #f0f0f0; font-family: sans-serif; padding: 20px; }
-        
-        /* Хедър */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: bold; color: white; }
-        .back-btn { 
-            text-decoration: none; color: #d000ff; border: 2px solid #d000ff; 
-            padding: 8px 20px; border-radius: 20px; font-weight: bold; transition: 0.3s;
-        }
-        .back-btn:hover { background: #d000ff; color: white; }
-
-        /* Карти с поръчки */
-        .orders-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-        
-        .order-card {
-            background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px;
-            padding: 20px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        
-        .order-header { border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; }
-        .order-id { font-size: 12px; color: #888; }
-        .order-date { font-size: 12px; color: #aaa; }
-
-        .client-info { margin-bottom: 20px; }
-        .client-info p { margin: 5px 0; color: #ccc; }
-        .client-info strong { color: #d000ff; }
-
-        .order-items { background: #2c2c2c; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
-        .item-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px; }
-        
-        .total-row { font-size: 20px; font-weight: bold; text-align: right; color: #28a745; margin-top: 10px; }
-
-        .action-btn {
-            width: 100%; padding: 12px; background-color: #d000ff; color: white; border: none;
-            border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s;
-        }
-        .action-btn:hover { background-color: #a000cc; }
-        .delete-btn { background-color: #ff4444; margin-top: 5px; }
-        .delete-btn:hover { background-color: #cc0000; }
-
-        h1 { color: #f0f0f0; }
-    </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">ADMIN PANEL 🛡️</div>
-        <a href="shop.html" class="back-btn">Обратно в Магазина</a>
+        <div class="logo">Fashion<span style="color:#d000ff;">Admin</span></div>
+        <div class="nav-links">
+            <a href="shop.html" class="nav-btn"><i class="fas fa-store"></i> <span class="desk-text">Към Магазина</span></a>
+        </div>
     </header>
 
-    <h1>📦 Постъпили Поръчки</h1>
-    <div id="loading-msg">Зареждане на поръчките...</div>
-    
-    <div class="orders-container" id="orders-list">
+    <div class="admin-dashboard">
+        <h1 style="text-align:center; margin-bottom: 30px; color: #fff;">Управление на Поръчки 📦</h1>
+        <div id="orders-container">
+            <p style="text-align:center; color:#888;">Зареждане на поръчките...</p>
         </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b", measurementId: "G-Z44LH253C4" };
-        
+        // ТВОЯТ FIREBASE
+        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const ADMIN_EMAIL = "admin@fashion.com";
+        
+        const ADMIN_EMAIL = "admin@fashion.com"; // САМО ТОЗИ ИМЕЙЛ ИМА ДОСТЪП
 
-        // 1. ЗАЩИТА: Само Админ може да е тук
+        // ПРОВЕРКА ЗА ДОСТЪП
         onAuthStateChanged(auth, (user) => {
             if (!user || user.email !== ADMIN_EMAIL) {
-                alert("⛔ Нямате достъп до тази страница!");
-                window.location.href = "shop.html";
+                alert("⛔ Достъпът е забранен! Само за администратори.");
+                window.location.href = "index.html";
             } else {
-                loadOrders();
+                loadOrders(); // Ако е админът, зареждаме поръчките
             }
         });
 
-        // 2. Функция за зареждане на поръчки
+        // ДЪРПАНЕ НА ПОРЪЧКИТЕ ОТ БАЗАТА
         async function loadOrders() {
-            const container = document.getElementById('orders-list');
-            const loading = document.getElementById('loading-msg');
+            const container = document.getElementById('orders-container');
             container.innerHTML = '';
             
             try {
-                // Взимаме поръчките, подредени по дата (най-новите отгоре)
-                // Забележка: Ако даде грешка за index, махни orderBy засега
-                const q = query(collection(db, "orders")); 
+                // Взимаме поръчките и ги подреждаме по дата (най-новите първи)
+                const q = query(collection(db, "orders"), orderBy("date", "desc"));
                 const querySnapshot = await getDocs(q);
-
+                
                 if (querySnapshot.empty) {
-                    loading.innerText = "Няма нови поръчки.";
+                    container.innerHTML = '<p style="text-align:center; color:#fff;">Все още няма направени поръчки.</p>';
                     return;
                 }
 
-                loading.style.display = 'none';
-
                 querySnapshot.forEach((docSnap) => {
-                    const order = docSnap.data();
-                    const orderId = docSnap.id;
-                    
-                    // Форматираме продуктите
+                    let order = docSnap.data();
+                    let orderId = docSnap.id;
+                    let dateStr = new Date(order.date).toLocaleString('bg-BG');
+
+                    // Генериране на списъка с дрехи за тази поръчка
                     let itemsHtml = '';
                     order.items.forEach(item => {
                         itemsHtml += `
-                            <div class="item-row">
-                                <span>${item.title} (Размер: ${item.size})</span>
-                                <span>${item.price} €</span>
-                            </div>`;
+                            <li>
+                                <img src="${item.img}" alt="img">
+                                <div>
+                                    <div style="color:#fff; font-size:13px; font-weight:bold;">${item.title}</div>
+                                    <div style="color:#aaa; font-size:12px;">Размер: ${item.size} | ${item.price} €</div>
+                                </div>
+                            </li>
+                        `;
                     });
 
-                    // Създаваме картата
+                    // Цветове за различните статуси
+                    let statusColor = order.status === 'Нова' ? '#00c6ff' : (order.status === 'Изпратена' ? '#d000ff' : '#00e676');
+
                     const html = `
                         <div class="order-card">
                             <div class="order-header">
-                                <span class="order-id">ID: ${orderId.slice(0,8)}...</span>
-                                <span class="order-date">${order.createdAt ? new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 'Днес'}</span>
+                                <div><strong style="color:#aaa;">ID:</strong> ${orderId}</div>
+                                <div><strong style="color:#aaa;">Дата:</strong> ${dateStr}</div>
+                                <div>
+                                    <select class="status-select" style="border-color:${statusColor}; color:${statusColor};" onchange="updateOrderStatus('${orderId}', this.value)">
+                                        <option value="Нова" ${order.status === 'Нова' ? 'selected' : ''}>🔵 Нова</option>
+                                        <option value="Изпратена" ${order.status === 'Изпратена' ? 'selected' : ''}>🟣 Изпратена</option>
+                                        <option value="Доставена" ${order.status === 'Доставена' ? 'selected' : ''}>🟢 Доставена</option>
+                                    </select>
+                                </div>
                             </div>
                             
-                            <div class="client-info">
-                                <p><strong>Клиент:</strong> ${order.recipient}</p>
-                                <p><strong>Тел:</strong> <a href="tel:${order.phone}" style="color:#fff;">${order.phone}</a></p>
-                                <p><strong>Град/Държава:</strong> ${order.location}</p>
-                                <p><strong>Адрес:</strong> ${order.address}</p>
+                            <div class="order-info">
+                                <div class="order-customer">
+                                    <h3 style="color:#fff; margin-top:0; margin-bottom:15px;">Клиент</h3>
+                                    <p>👤 <strong>Име:</strong> ${order.name}</p>
+                                    <p>📞 <strong>Телефон:</strong> ${order.phone}</p>
+                                    <p>🏙️ <strong>Град:</strong> ${order.city}</p>
+                                    <p>📍 <strong>Адрес:</strong> ${order.address}</p>
+                                    <p>💳 <strong>Плащане:</strong> ${order.payment === 'cash' ? 'Наложен платеж' : 'Карта'}</p>
+                                </div>
+                                
+                                <div class="order-items">
+                                    <h3 style="color:#fff; margin-top:0; margin-bottom:15px;">Продукти</h3>
+                                    <ul>${itemsHtml}</ul>
+                                    <div style="text-align:right; margin-top:10px; font-size:18px; font-weight:bold; color:#d000ff;">
+                                        Общо: ${order.total}
+                                    </div>
+                                    <div class="action-btns" style="justify-content: flex-end;">
+                                        <button class="del-order-btn" onclick="deleteOrder('${orderId}')">🗑️ ИЗТРИЙ ПОРЪЧКАТА</button>
+                                    </div>
+                                </div>
                             </div>
-
-                            <div class="order-items">
-                                ${itemsHtml}
-                            </div>
-
-                            <div class="total-row">ОБЩО: ${order.totalPrice.toFixed(2)} €</div>
-
-                            <button onclick="deleteOrder('${orderId}')" class="action-btn delete-btn">✅ ИЗПЪЛНЕНА / ИЗТРИЙ</button>
                         </div>
                     `;
                     container.innerHTML += html;
                 });
 
             } catch (error) {
-                console.error(error);
-                loading.innerText = "Грешка при зареждане.";
+                container.innerHTML = `<p style="color:red;">Грешка: ${error.message}</p>`;
             }
         }
 
-        // 3. Функция за триене
+        // ФУНКЦИЯ ЗА СМЯНА НА СТАТУСА
+        window.updateOrderStatus = async function(id, newStatus) {
+            try {
+                await updateDoc(doc(db, "orders", id), { status: newStatus });
+                // Сменяме цвета на селекта веднага
+                let statusColor = newStatus === 'Нова' ? '#00c6ff' : (newStatus === 'Изпратена' ? '#d000ff' : '#00e676');
+                event.target.style.borderColor = statusColor;
+                event.target.style.color = statusColor;
+            } catch (e) { alert("Грешка при обновяване!"); }
+        }
+
+        // ФУНКЦИЯ ЗА ИЗТРИВАНЕ НА ПОРЪЧКА
         window.deleteOrder = async function(id) {
-            if(confirm("Маркирате поръчката като изпълнена и ще бъде изтрита от списъка?")) {
-                await deleteDoc(doc(db, "orders", id));
-                loadOrders(); // Презареждаме
+            if(confirm("Сигурен ли си, че искаш да изтриеш тази поръчка завинаги?")) {
+                try {
+                    await deleteDoc(doc(db, "orders", id));
+                    loadOrders(); // Презареждаме списъка
+                } catch (e) { alert("Грешка при изтриване!"); }
             }
         }
     </script>

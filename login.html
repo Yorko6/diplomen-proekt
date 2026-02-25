@@ -3,157 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход - Fashion Store</title>
-    <style>
-        body {
-            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif;
-            background-color: #121212; color: white;
-            display: flex; justify-content: center; align-items: center; height: 100vh;
-        }
-        /* Първо се увери, че login-box има това, за да не избяга хикса */
-.login-box {
-    position: relative;     
-}
-
-        /* Стил за самия бутон X */
-.close-login {
-    position: absolute;
-    top: 15px;      /* Разстояние от горния ръб */
-    right: 20px;    /* Разстояние от десния ръб */
-    font-size: 30px;
-    color: #ffffff;
-    text-decoration: none;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-    transition: 0.3s;
-}
-
-.close-login:hover {
-    color: #d000ff; /* Лилав цвят при посочване */
-    transform: scale(1.2);
-}
-        h2 { color: #d000ff; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        input {
-            width: 100%; padding: 12px; margin: 10px 0;
-            background-color: #2c2c2c; border: 1px solid #444; color: white; border-radius: 6px;
-            box-sizing: border-box; outline: none;
-        }
-        input:focus { border-color: #d000ff; }
-        
-        .action-btn {
-            width: 100%; padding: 12px; margin-top: 15px;
-            background-color: #d000ff; border: none; color: white;
-            font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 16px;
-            transition: 0.3s;
-        }
-        .action-btn:hover { background-color: #bd00ff; box-shadow: 0 0 15px #d000ff; }
-        
-        .toggle-link {
-            margin-top: 20px; font-size: 14px; color: #aaa; cursor: pointer; text-decoration: underline;
-        }
-        .toggle-link:hover { color: #fff; }
-
-        .error-msg {
-            color: #ff4444; font-size: 13px; margin-top: 10px; display: none;
-        }
-    </style>
+    <title>Fashion Store - Вход</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body style="display: flex; flex-direction: column; min-height: 100vh;">
 
-    <div class="login-box">
-        <a href="shop.html" class="close-login">&times;</a>
-        <h2 id="form-title">ВХОД</h2>
-        
-        <input type="email" id="email" placeholder="Email адрес">
-        <input type="password" id="password" placeholder="Парола (мин. 6 символа)">
-        
-        <p id="error-text" class="error-msg"></p>
+    <header>
+        <div class="logo">Fashion<span>Store</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> <span class="desk-text">Начало</span></a>
+            <a href="shop.html" class="nav-btn"><i class="fas fa-tshirt"></i> <span class="desk-text">Магазин</span></a>
+        </div>
+    </header>
 
-        <button class="action-btn" id="submit-btn">ВЛЕЗ</button>
+    <div class="auth-wrapper">
+        <div class="auth-box">
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Вход</button>
+                <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Регистрация</button>
+            </div>
 
-        <div class="toggle-link" id="toggle-mode">Нямаш акаунт? Регистрирай се тук</div>
+            <h2 id="auth-title" style="text-align:center; color:#fff; margin-bottom: 25px;">Добре дошли отново!</h2>
+
+            <form id="auth-form">
+                <label>Имейл</label>
+                <input type="email" id="auth-email" class="premium-input" placeholder="вашият@имейл.com" required>
+
+                <label>Парола</label>
+                <input type="password" id="auth-password" class="premium-input" placeholder="••••••••" required minlength="6">
+
+                <button type="submit" class="hero-btn" id="auth-submit-btn" style="width: 100%; justify-content: center; margin-top: 10px;">
+                    ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>
+                </button>
+            </form>
+            
+            <p id="auth-error" style="color: #ff4e00; text-align: center; margin-top: 15px; font-size: 13px; font-weight: 600; display: none;"></p>
+        </div>
     </div>
 
     <script type="module">
-        // 1. Импорт на Firebase Authentication
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0",
-            authDomain: "magazine-9e774.firebaseapp.com",
-            projectId: "magazine-9e774",
-            storageBucket: "magazine-9e774.firebasestorage.app",
-            messagingSenderId: "865604014690",
-            appId: "1:865604014690:web:11aa52fa2c8f34b462373b",
-            measurementId: "G-Z44LH253C4"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Логика за смяна между Вход и Регистрация
-        let isLoginMode = true;
-        const title = document.getElementById('form-title');
-        const btn = document.getElementById('submit-btn');
-        const toggle = document.getElementById('toggle-mode');
-        const errorText = document.getElementById('error-text');
+        let currentMode = 'login'; // По подразбиране сме на Вход
 
-        toggle.addEventListener('click', () => {
-            isLoginMode = !isLoginMode;
-            errorText.style.display = 'none';
-            if(isLoginMode) {
-                title.innerText = "ВХОД";
-                btn.innerText = "ВЛЕЗ";
-                toggle.innerText = "Нямаш акаунт? Регистрирай се тук";
+        // Функция за смяна на табовете (Вход <-> Регистрация)
+        window.switchTab = function(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + mode).classList.add('active');
+            
+            if(mode === 'login') {
+                document.getElementById('auth-title').innerText = "Добре дошли отново!";
+                document.getElementById('auth-submit-btn').innerHTML = 'ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>';
             } else {
-                title.innerText = "РЕГИСТРАЦИЯ";
-                btn.innerText = "СЪЗДАЙ АКАУНТ";
-                toggle.innerText = "Вече имаш акаунт? Влез тук";
+                document.getElementById('auth-title').innerText = "Създай нов профил";
+                document.getElementById('auth-submit-btn').innerHTML = 'РЕГИСТРИРАЙ СЕ <i class="fas fa-user-plus"></i>';
             }
-        });
+            document.getElementById('auth-error').style.display = 'none';
+        }
 
-        // Основна функция
-        btn.addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            errorText.style.display = 'none';
-
-            if(!email || !password) {
-                showError("Моля попълнете всички полета");
-                return;
-            }
+        // Обработка на формата
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const btn = document.getElementById('auth-submit-btn');
+            const errorEl = document.getElementById('auth-error');
+            
+            btn.disabled = true;
+            btn.innerHTML = "⏳ Моля изчакайте...";
+            errorEl.style.display = 'none';
 
             try {
-                if (isLoginMode) {
-                    // --- ВХОД ---
+                if(currentMode === 'login') {
                     await signInWithEmailAndPassword(auth, email, password);
-                    window.location.href = "index.html"; // Успешен вход -> към сайта
                 } else {
-                    // --- РЕГИСТРАЦИЯ ---
                     await createUserWithEmailAndPassword(auth, email, password);
-                    alert("Регистрацията успешна! Добре дошъл.");
-                    window.location.href = "index.html";
                 }
+                
+                // Проверяваме дали идва от количката
+                const returnUrl = localStorage.getItem('returnTo') || 'shop.html';
+                localStorage.removeItem('returnTo');
+                window.location.href = returnUrl;
+
             } catch (error) {
-                console.error(error);
-                let msg = "Грешка!";
-                if(error.code === 'auth/invalid-credential') msg = "Грешен имейл или парола!";
-                if(error.code === 'auth/email-already-in-use') msg = "Този имейл вече е регистриран!";
-                if(error.code === 'auth/weak-password') msg = "Паролата трябва да е поне 6 символа!";
-                showError(msg);
+                errorEl.innerText = "Грешка: " + error.message;
+                errorEl.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = currentMode === 'login' ? 'ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>' : 'РЕГИСТРИРАЙ СЕ <i class="fas fa-user-plus"></i>';
             }
         });
-
-        function showError(msg) {
-            errorText.innerText = msg;
-            errorText.style.display = 'block';
-        }
     </script>
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> 800b57c7886d3a6db1fdd1b1a9b4d85f37a3ccb5
