@@ -140,6 +140,8 @@ button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !i
 .toast.error { border-left-color: #ff1744; } .toast.error i { color: #ff1744; }
 @keyframes slideIn { to { transform: translateX(0); } } @keyframes slideOut { to { transform: translateX(150%); opacity: 0; } }
 
+
+
 /* =========================================
    === 📱 МОБИЛНА ВЕРСИЯ (RESPONSIVE) ===
 ========================================= */
