@@ -16,21 +16,49 @@ let state = { gender: 'all', category: 'all', search: '', sort: 'default' };
 
 onAuthStateChanged(auth, (user) => {
     const authBtn = document.getElementById('auth-btn');
+    const adminPanel = document.getElementById('admin-panel');
+    const adminBadge = document.getElementById('admin-badge');
+
     if (user) {
         currentUser = user;
-        if(authBtn) { authBtn.innerText = "ИЗХОД"; authBtn.onclick = () => { signOut(auth).then(() => window.location.reload()); }; }
-        if(user.email === ADMIN_EMAIL) {
-            document.getElementById('admin-panel').style.display = 'block';
-            document.getElementById('admin-badge').style.display = 'inline-block';
+        
+        // 1. Сменяме бутона на ИЗХОД
+        if(authBtn) { 
+            authBtn.innerText = "ИЗХОД"; 
+            authBtn.onclick = () => { signOut(auth).then(() => window.location.reload()); }; 
+            authBtn.href = "#"; // Махаме линка, за да не го праща никъде при изход
         }
+        
+        // 2. ПРОВЕРКА ЗА АДМИН
+        if(user.email === ADMIN_EMAIL) {
+            // Ако е шефът -> Показваме тайните неща (ако ги има на страницата)
+            if (adminPanel) adminPanel.style.display = 'block';
+            if (adminBadge) adminBadge.style.display = 'inline-block';
+        } else {
+            // АКО Е ОБИКНОВЕН КЛИЕНТ -> Твърдо КРИЕМ админ панела! (Тук ти беше пропускът)
+            if (adminPanel) adminPanel.style.display = 'none';
+            if (adminBadge) adminBadge.style.display = 'none';
+        }
+        
     } else {
+        // АКО НЯМА ВЛЯЗЪЛ ЧОВЕК (ГОСТ)
         currentUser = null;
-        if(authBtn) { authBtn.innerText = "ВХОД"; authBtn.href = "login.html"; authBtn.onclick = null; }
-        document.getElementById('admin-panel').style.display = 'none';
-        document.getElementById('admin-badge').style.display = 'none';
+        
+        // 1. Връщаме бутона на ВХОД
+        if(authBtn) { 
+            authBtn.innerText = "ВХОД"; 
+            authBtn.href = "login.html"; 
+            authBtn.onclick = null; 
+        }
+        
+        // 2. Твърдо КРИЕМ админ панела за гости
+        if (adminPanel) adminPanel.style.display = 'none';
+        if (adminBadge) adminBadge.style.display = 'none';
     }
-    loadProductsFromDB(); 
-    window.updateCartCount();
+
+    // Зареждаме продуктите и количката
+    if (typeof loadProductsFromDB === "function") loadProductsFromDB(); 
+    if (typeof window.updateCartCount === "function") window.updateCartCount();
 });
 
 window.applyFilters = function() {
@@ -255,59 +283,63 @@ async function loadProductsFromDB() {
     } catch (error) { console.error(error); }
 }
 
-function renderProducts(list) {
+function renderProducts(productsToRender) {
     const container = document.getElementById('products-container');
-    container.innerHTML = '';
-    if(list.length === 0) { container.innerHTML = '<p style="text-align:center; color:#888;">Няма намерени продукти.</p>'; return; }
+    if (!container) return;
     
-    list.forEach((product) => {
-        let adminControls = '';
-        if (currentUser && currentUser.email === ADMIN_EMAIL) {
-            adminControls = `
-                <div style="display:flex; gap:5px; margin-top:5px;">
-                    <button onclick="openEditModal('${product.id}')" style="background:orange; color:white; border:none; padding:5px; flex:1; cursor:pointer; font-weight:bold; border-radius:4px;">✏️ РЕДАКТИРАЙ</button>
-                    <button class="delete-btn" data-id="${product.id}" style="background:red; color:white; border:none; padding:5px; flex:1; cursor:pointer; font-weight:bold; border-radius:4px;">🗑 ИЗТРИЙ</button>
-                </div>
-            `;
-        }
+    container.innerHTML = '';
+    
+    if (productsToRender.length === 0) {
+        container.innerHTML = '<p style="color:#888; text-align:center; width: 100%;">Няма намерени продукти.</p>';
+        return;
+    }
+
+    productsToRender.forEach(p => {
+        // 1. Събираме всички бройки от различните размери
+        let s = Number(p.qtyS || p.qty_s || p['qty-s'] || p.new_qty_s || 0);
+        let m = Number(p.qtyM || p.qty_m || p['qty-m'] || p.new_qty_m || 0);
+        let l = Number(p.qtyL || p.qty_l || p['qty-l'] || p.new_qty_l || 0);
+        let xl = Number(p.qtyXL || p.qty_xl || p['qty-xl'] || p.new_qty_xl || 0);
         
-        let priceHtml = `<span style="color:red; font-weight:bold; font-size:18px; display:block; margin-bottom:10px;">${product.price} €</span>`;
-        let discountBadge = '';
-
-        if (product.discount > 0) {
-            let finalPrice = product.price - (product.price * (product.discount / 100));
-            priceHtml = `
-                <div style="margin-bottom:10px;">
-                    <span style="text-decoration:line-through; color:#666; font-size:14px; margin-right:5px;">${product.price} €</span>
-                    <span style="color:red; font-weight:bold; font-size:18px;">${finalPrice.toFixed(2)} €</span>
-                </div>
-            `;
-            discountBadge = `<div class="discount-badge">-${product.discount}%</div>`;
+        // Смятаме общо колко тениски има останали
+        let totalQty = s + m + l + xl;
+        
+        // Ако няма размери, а ползваш някакво общо поле qty
+        if (totalQty === 0 && p.qty) {
+            totalQty = Number(p.qty);
         }
 
-        let stockBadge = `<div class="qty-badge">Налично: ${product.qty || 0}</div>`;
-        if ((product.qty || 0) <= 0) stockBadge = `<div class="qty-badge" style="background:#555;">ИЗЧЕРПАНО</div>`;
+        // 2. Правим готиния бадж за наличност (Зелен/Сив ако има, Червен ако няма)
+        let badgeHtml = '';
+        if (totalQty > 0) {
+            badgeHtml = `<div class="qty-badge" style="background: #1a1a24; color: #aaa; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; position: absolute; top: 15px; right: 15px; z-index: 10; border: 1px solid #333;">Налично: ${totalQty}</div>`;
+        } else {
+            badgeHtml = `<div class="qty-badge" style="background: #ff1744; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; position: absolute; top: 15px; right: 15px; z-index: 10; box-shadow: 0 4px 10px rgba(255, 23, 68, 0.4);">ИЗЧЕРПАНО</div>`;
+        }
 
         const html = `
-            <div class="product-card">
-                ${stockBadge}
-                ${discountBadge}
+            <div class="product-card" style="position: relative;">
+                ${badgeHtml}
                 <div class="product-img-wrapper">
-                    <img src="${product.img}" onerror="this.src='https://via.placeholder.com/300'">
+                    <img src="${p.img}" alt="${p.title}">
                 </div>
-                <h3 style="color:#f0f0f0; margin:10px 0;">${product.title}</h3>
-                ${priceHtml}
-                <button class="open-modal-btn" data-id="${product.id}" style="background:#3498db; color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer;">Виж Опции</button>
-                ${adminControls}
-            </div>`;
+                <h3>${p.title}</h3>
+                <div style="margin-bottom: 15px;">
+                    <span style="color: #d000ff; font-weight: bold; font-size: 18px;">${p.price} €</span>
+                </div>
+                
+                ${totalQty > 0 ? `<button class="open-modal-btn" onclick="openProductModal('${p.id}')">ВИЖ ОПЦИИ</button>` : `<button class="open-modal-btn" style="background: #333; border-color: #444; color: #888; cursor: not-allowed;" disabled>Няма наличност</button>`}
+            </div>
+        `;
         container.innerHTML += html;
     });
+}
 
     document.querySelectorAll('.open-modal-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = e.target.getAttribute('data-id'); const product = allProducts.find(p => p.id === id); window.openProductModal(product); }));
     if (currentUser && currentUser.email === ADMIN_EMAIL) {
         document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', async (e) => { if(confirm("Изтриване?")) { await deleteDoc(doc(db, "products", e.target.getAttribute('data-id'))); loadProductsFromDB(); } }));
     }
-}
+
 
 document.getElementById('add-btn').addEventListener('click', async () => {
     const title = document.getElementById('new-title').value;
