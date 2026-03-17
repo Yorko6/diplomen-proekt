@@ -1,78 +1,189 @@
-body {
-    background-color: #12141d;
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-}
+/* =========================================
+   === 1. ГЛОБАЛНИ СТИЛОВЕ И ОСНОВА ===
+========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
-.container {
-    width: 90%;
-    max-width: 1000px;
-    background: #070709;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
+body { background-color: #0d0d12; color: #e0e0e0; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; }
 
-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
+/* =========================================
+   === 2. ХЕДЪР И МЕНЮ ===
+========================================= */
+header { display: flex; justify-content: space-between; padding: 15px 40px; background: rgba(13, 13, 18, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); position: sticky; top: 0; z-index: 1000; }
+.logo { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+.logo span { color: #d000ff; }
+.nav-links { display: flex; align-items: center; gap: 15px; }
 
-.status-circle {
-    border: 2px solid #00ff88;
-    display: inline-block;
-    padding: 20px;
-    border-radius: 50%;
-    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
-}
+.nav-btn { padding: 8px 20px; border: 1px solid rgba(208, 0, 255, 0.5); border-radius: 30px; color: #fff !important; text-decoration: none; font-weight: 600; font-size: 14px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; cursor: pointer; background: transparent; position: relative; }
+.nav-btn:hover { background: rgba(208, 0, 255, 0.1); border-color: #d000ff; transform: translateY(-2px); }
 
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+.cart-count-badge { background-color: #ff007f; color: white; border-radius: 50%; padding: 2px 7px; font-size: 11px; position: absolute; top: -8px; right: -8px; display: none; font-weight: bold; box-shadow: 0 2px 5px rgba(255,0,127,0.5); }
 
-    transition: transform 0.3s;
-}
-.dashboard:hover {
-    transform: translateY(-5px);
-}
+/* =========================================
+   === 3. УНИВЕРСАЛНИ БУТОНИ И ПОЛЕТА ===
+========================================= */
+.auth-btn-filled { background: linear-gradient(135deg, #d000ff, #ff007f); color: white !important; border: none; padding: 10px 25px; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 14px; text-transform: uppercase; transition: 0.3s; box-shadow: 0 4px 15px rgba(208, 0, 255, 0.4); }
+.auth-btn-filled:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 0, 127, 0.6); }
 
-.card {
-    background: #252936;
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    transition: transform 0.3s;
-}
+.premium-input { width: 100%; padding: 14px; background: #1a1a24; color: #fff; border: 1px solid #2a2a36; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-family: 'Poppins', sans-serif; transition: all 0.3s ease; box-sizing: border-box; }
+.premium-input:focus { outline: none; background: #15151e; border-color: #d000ff; box-shadow: 0 0 15px rgba(208, 0, 255, 0.2); }
 
-.card:hover {
-    transform: translateY(-5px);
-}
+.hero-btn { background: linear-gradient(135deg, #d000ff, #ff007f); color: white; padding: 18px 45px; text-decoration: none; font-size: 16px; font-weight: 700; border-radius: 30px; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(208, 0, 255, 0.4); text-transform: uppercase; border: none; cursor: pointer; }
+.hero-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(255, 0, 127, 0.6); }
 
-.value {
-    font-size: 3rem;
-    font-weight: bold;
-    margin: 10px 0;
-}
+/* =========================================
+   === 4. НАЧАЛНА СТРАНИЦА (HOME) ===
+========================================= */
+.hero-section { height: 85vh; display: flex; align-items: center; justify-content: center; text-align: center; background: linear-gradient(to bottom, rgba(13, 13, 18, 0.7), #0d0d12), url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover; padding: 0 20px; margin-top: -80px; padding-top: 80px; }
+.hero-content h1 { font-size: 65px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(135deg, #ffffff, #d000ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 2px; }
+.hero-content p { font-size: 18px; color: #cccccc; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6; }
 
-.small-value {
-    font-size: 1.5rem;
-    color: #00ff88;
-}
+.features-section { display: flex; justify-content: center; gap: 30px; padding: 60px 20px 100px 20px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
+.feature-box { background: #15151e; padding: 40px 30px; border-radius: 16px; text-align: center; flex: 1; min-width: 250px; border: 1px solid rgba(255,255,255,0.03); transition: transform 0.3s ease, border-color 0.3s ease; }
+.feature-box:hover { transform: translateY(-8px); border-color: rgba(208, 0, 255, 0.3); }
+.feature-box i { font-size: 45px; background: linear-gradient(135deg, #d000ff, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
+.feature-box h3 { font-size: 20px; color: #fff; margin-bottom: 12px; font-weight: 600; }
+.feature-box p { color: #888; font-size: 14px; line-height: 1.6; }
 
-.multi-value {
-    display: flex;
-    justify-content: space-around;
-}
+/* =========================================
+   === 5. МАГАЗИН И ПРОДУКТИ (SHOP) ===
+========================================= */
+.categories { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
+button.cat-btn { background-color: #1a1a24 !important; color: #aaa !important; border: 1px solid #2a2a36 !important; padding: 12px 25px !important; border-radius: 30px !important; font-weight: 600 !important; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; }
+button.cat-btn:hover { background-color: #2a2a36 !important; color: #fff !important; transform: translateY(-2px); }
+button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !important; border: none !important; color: white !important; box-shadow: 0 4px 15px rgba(208, 0, 255, 0.4) !important; }
+#gender-selection .cat-btn { width: 130px; height: 50px; font-size: 16px; margin: 0 5px; }
 
-.chart-container {
-    background: #252936;
-    padding: 20px;
-    border-radius: 15px;
+.search-sort-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; padding: 0 20px; flex-wrap: wrap; }
+#search-input, #sort-select { padding: 14px 25px; background-color: #1a1a24; color: #fff; border: 1px solid #2a2a36; border-radius: 30px; font-size: 15px; outline: none; transition: 0.3s; font-family: 'Poppins', sans-serif; }
+#search-input { flex: 1; max-width: 450px; } #sort-select { cursor: pointer; }
+#search-input:focus, #sort-select:focus { border-color: #d000ff; box-shadow: 0 0 15px rgba(208,0,255,0.2); }
+
+.products-grid { display: flex; flex-wrap: wrap; gap: 25px; justify-content: center; padding: 20px; max-width: 1050px; margin: 0 auto; }
+.product-card { background: #15151e; padding: 18px; border-radius: 16px; text-align: center; position: relative; width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.03); overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; }
+.product-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); border-color: rgba(208,0,255,0.2); }
+.product-img-wrapper { width: 100%; height: 320px; overflow: hidden; border-radius: 12px; margin-bottom: 15px; }
+.product-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.product-card:hover .product-img-wrapper img { transform: scale(1.08); }
+.product-card h3 { font-size: 18px; font-weight: 600; margin: 10px 0; color: #fff; }
+
+.open-modal-btn { background: #1a1a24; color: #fff; border: 1px solid #d000ff; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Poppins', sans-serif; transition: all 0.3s; margin-top: 10px; }
+.open-modal-btn:hover { background: #d000ff; color: white; box-shadow: 0 4px 15px rgba(208,0,255,0.4); }
+
+/* =========================================
+   === 6. МОДАЛ ЗА ДЕТАЙЛИ ===
+========================================= */
+.modal-overlay { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
+.modal-content { background-color: #15151e; margin: 5% auto; padding: 20px; border: 1px solid rgba(255,255,255,0.05); width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: #f0f0f0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+.close-modal { position: absolute; top: 15px; right: 20px; color: #888; font-size: 28px; cursor: pointer; z-index: 100; transition: 0.3s; }
+.close-modal:hover { color: #fff; transform: rotate(90deg); }
+#productModal .modal-content { max-width: 950px; display: flex; padding: 0; }
+.pm-left { flex: 1; background: #000; overflow: hidden; position: relative; cursor: crosshair; }
+.pm-left img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.2s ease-out; transform-origin: center center; }
+.pm-left:hover img { transform: scale(2.5); }
+.pm-right { flex: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+
+.size-label { color: #888; margin-bottom: 12px; display: block; font-weight: 600; text-transform: uppercase; font-size: 13px; }
+.size-options { display: flex; gap: 10px; margin-bottom: 30px; }
+.size-btn { flex: 1; padding: 12px; background-color: #1a1a24; border: 1px solid #2a2a36; color: #aaa; text-align: center; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; user-select: none; }
+.size-btn:hover:not(.disabled) { border-color: #d000ff; color: #fff; }
+.size-btn.active:not(.disabled) { background: linear-gradient(135deg, #d000ff, #ff007f); border: none; color: white; box-shadow: 0 4px 15px rgba(208, 0, 255, 0.4); transform: scale(1.05); }
+.size-btn.disabled { text-decoration: line-through; opacity: 0.2; cursor: not-allowed; background-color: #0f0f13; border-color: #1a1a24; }
+
+#add-to-cart-btn { background: linear-gradient(135deg, #00c6ff, #0072ff); color: white; border: none; padding: 16px; font-weight: 700; cursor: pointer; width: 100%; border-radius: 30px; font-size: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4); font-family: 'Poppins', sans-serif; }
+#add-to-cart-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 114, 255, 0.6); }
+
+/* =========================================
+   === 7. ПРЕМИУМ ЧЕКАУТ ===
+========================================= */
+.checkout-container { display: flex; max-width: 1200px; margin: 50px auto; padding: 0 20px; gap: 40px; align-items: flex-start; }
+.checkout-form-section { flex: 2; background: #15151e; padding: 40px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+.checkout-form-section h2 { color: #fff; margin-top: 0; margin-bottom: 25px; font-size: 24px; border-bottom: 1px solid #2a2a36; padding-bottom: 15px; }
+.checkout-form-section label { display: block; color: #aaa; margin-bottom: 8px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+.checkout-summary { flex: 1; background: #1a1a24; padding: 35px; border-radius: 16px; border: 1px solid rgba(208,0,255,0.3); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(208,0,255,0.05); position: sticky; top: 100px; }
+.checkout-summary h2 { color: #fff; margin-top: 0; margin-bottom: 20px; font-size: 20px; }
+.checkout-items-list { max-height: 350px; overflow-y: auto; margin-bottom: 25px; padding-right: 10px; }
+.checkout-items-list::-webkit-scrollbar { width: 5px; }
+.checkout-items-list::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #d000ff, #ff007f); border-radius: 10px; }
+.checkout-item { display: flex; align-items: center; border-bottom: 1px solid #2a2a36; padding: 15px 0; gap: 15px; }
+.checkout-item img { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+.checkout-item-info h4 { margin: 0 0 5px 0; font-size: 14px; color: #fff; }
+.checkout-item-info p { margin: 0; font-size: 12px; color: #888; }
+.checkout-item-info .price { color: #d000ff; font-weight: bold; font-size: 15px; display: block; margin-top: 5px;}
+.checkout-total { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 2px dashed #333; font-weight: bold; font-size: 18px; color: #fff; }
+.checkout-total #checkout-total-price { color: #ff007f; font-size: 26px; text-shadow: 0 0 10px rgba(255, 0, 127, 0.4); }
+
+/* =========================================
+   === 8. ВХОД / РЕГИСТРАЦИЯ ===
+========================================= */
+.auth-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 20px; }
+.auth-box { background: #15151e; padding: 40px; width: 100%; max-width: 420px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+.auth-tabs { display: flex; margin-bottom: 30px; background: #1a1a24; border-radius: 30px; padding: 5px; }
+.auth-tab { flex: 1; background: transparent; border: none; color: #888; padding: 12px; font-size: 14px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: 0.3s; border-radius: 25px; }
+.auth-tab:hover { color: #fff; }
+.auth-tab.active { background: linear-gradient(135deg, #d000ff, #ff007f); color: white; box-shadow: 0 4px 15px rgba(208, 0, 255, 0.4); }
+
+/* =========================================
+   === 9. АДМИН ПАНЕЛ ===
+========================================= */
+.admin-dashboard { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+.order-card { background: #15151e; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 25px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-family: 'Poppins', sans-serif; }
+.order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a36; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; font-size: 14px; }
+.order-info { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 30px; }
+.order-customer, .order-items { flex: 1; min-width: 300px; }
+.order-customer p { color: #ccc; font-size: 14px; margin: 8px 0; line-height: 1.5; }
+.order-items ul { list-style: none; padding: 0; margin: 0; }
+.order-items li { background: #1a1a24; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255, 255, 255, 0.02); }
+.order-items img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
+.status-select { background: #1a1a24; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-family: 'Poppins', sans-serif; cursor: pointer; outline: none; transition: 0.3s; background-image: none; }
+.del-order-btn { background: #ff1744; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Poppins', sans-serif; transition: 0.3s; }
+.del-order-btn:hover { background: #d50000; box-shadow: 0 4px 15px rgba(255, 23, 68, 0.4); }
+
+/* =========================================
+   === 10. TOAST ИЗВЕСТИЯ ===
+========================================= */
+#toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
+.toast { background: rgba(21, 21, 30, 0.95); backdrop-filter: blur(10px); border-left: 4px solid #d000ff; color: #fff; padding: 16px 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 12px; transform: translateX(120%); animation: slideIn 0.4s forwards, slideOut 0.4s forwards 2.6s; }
+.toast.success { border-left-color: #00e676; } .toast.success i { color: #00e676; }
+.toast.error { border-left-color: #ff1744; } .toast.error i { color: #ff1744; }
+@keyframes slideIn { to { transform: translateX(0); } } @keyframes slideOut { to { transform: translateX(150%); opacity: 0; } }
+
+/* =========================================
+   === 📱 11. МОБИЛНА ВЕРСИЯ (RESPONSIVE) ===
+========================================= */
+@media (max-width: 768px) {
+    header { flex-direction: column; padding: 15px; gap: 15px; }
+    .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
+    .nav-btn, .auth-btn-filled { padding: 8px 12px; font-size: 12px; }
+    .desk-text { display: none; }
+    
+    .hero-section { height: auto; padding: 140px 20px 80px 20px; margin-top: 0; }
+    .hero-content h1 { font-size: 38px; line-height: 1.2; }
+    .hero-content p { font-size: 15px; }
+    .features-section { flex-direction: column; padding: 40px 20px; }
+    .feature-box { width: 100%; min-width: unset; box-sizing: border-box; }
+    
+    .search-sort-container { flex-direction: column; padding: 0 15px; }
+    #search-input, #sort-select { width: 100%; box-sizing: border-box; }
+    #gender-selection .cat-btn { width: 45%; font-size: 14px; height: 45px; }
+    
+    .products-grid { padding: 10px; }
+    .product-card { width: 100%; max-width: 380px; }
+    
+    #productModal .modal-content { flex-direction: column; height: 85vh; overflow-y: auto; margin: 15% auto; }
+    .pm-left { width: 100%; min-height: 350px; }
+    .pm-right { padding: 20px; }
+
+    .checkout-container { flex-direction: column-reverse; margin: 20px auto; gap: 25px; padding: 0 15px; }
+    .checkout-form-section, .checkout-summary { width: 100%; box-sizing: border-box; position: static; padding: 25px 20px; }
+
+    .auth-wrapper { padding: 30px 15px; }
+    .auth-box { padding: 30px 20px; }
+    .auth-tabs { margin-bottom: 20px; }
+    .auth-tab { padding: 10px; font-size: 13px; }
+
+    #toast-container { bottom: auto; top: 20px; right: 50%; transform: translateX(50%); width: 90%; }
+    .toast { animation: slideInTop 0.4s forwards, slideOutTop 0.4s forwards 2.6s; }
+    @keyframes slideInTop { from { transform: translateY(-100px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
+    @keyframes slideOutTop { to { transform: translateY(-100px); opacity: 0; } }
 }
