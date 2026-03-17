@@ -39,7 +39,7 @@
                 </button>
             </form>
             
-            <p id="auth-error" style="color: #ff4e00; text-align: center; margin-top: 15px; font-size: 13px; font-weight: 600; display: none;"></p>
+            <p id="auth-error" style="color: #ff1744; text-align: center; margin-top: 15px; font-size: 13px; font-weight: 600; display: none;"></p>
         </div>
     </div>
 
@@ -50,10 +50,8 @@
         const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        let currentMode = 'login';
 
-        let currentMode = 'login'; // По подразбиране сме на Вход
-
-        // Функция за смяна на табовете (Вход <-> Регистрация)
         window.switchTab = function(mode) {
             currentMode = mode;
             document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
@@ -69,7 +67,6 @@
             document.getElementById('auth-error').style.display = 'none';
         }
 
-        // Обработка на формата
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
@@ -77,27 +74,16 @@
             const btn = document.getElementById('auth-submit-btn');
             const errorEl = document.getElementById('auth-error');
             
-            btn.disabled = true;
-            btn.innerHTML = "⏳ Моля изчакайте...";
-            errorEl.style.display = 'none';
+            btn.disabled = true; btn.innerHTML = "⏳ Моля изчакайте..."; errorEl.style.display = 'none';
 
             try {
-                if(currentMode === 'login') {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } else {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                }
+                if(currentMode === 'login') await signInWithEmailAndPassword(auth, email, password);
+                else await createUserWithEmailAndPassword(auth, email, password);
                 
-                // Проверяваме дали идва от количката
-                const returnUrl = localStorage.getItem('returnTo') || 'shop.html';
-                localStorage.removeItem('returnTo');
-                window.location.href = returnUrl;
-
+                window.location.href = 'shop.html';
             } catch (error) {
-                errorEl.innerText = "Грешка: " + error.message;
-                errorEl.style.display = 'block';
-                btn.disabled = false;
-                btn.innerHTML = currentMode === 'login' ? 'ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>' : 'РЕГИСТРИРАЙ СЕ <i class="fas fa-user-plus"></i>';
+                errorEl.innerText = "Грешка: " + error.message; errorEl.style.display = 'block';
+                btn.disabled = false; btn.innerHTML = currentMode === 'login' ? 'ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>' : 'РЕГИСТРИРАЙ СЕ <i class="fas fa-user-plus"></i>';
             }
         });
     </script>
