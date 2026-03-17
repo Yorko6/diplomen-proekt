@@ -76,7 +76,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // ВАЖНО: Добавихме doc, getDoc и updateDoc за да можем да променяме наличностите
+        import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
         const app = initializeApp(firebaseConfig);
@@ -139,10 +140,41 @@
             };
 
             try {
+                // 1. ЗАПИСВАМЕ ПОРЪЧКАТА В БАЗАТА
                 await addDoc(collection(db, "orders"), orderData);
-                localStorage.removeItem('myShoppingCart'); // Изчистваме количката
+
+                // 2. 🪄 МАГИЯТА: НАМАЛЯВАМЕ НАЛИЧНОСТИТЕ С 1
+                for (const item of cart) {
+                    // Взимаме истинското ID на продукта (в количката му бяхме добавили времеви печат, затова го режем)
+                    const originalProductId = String(item.id).split('-')[0];
+                    const productRef = doc(db, "products", originalProductId);
+                    const productSnap = await getDoc(productRef);
+                    
+                    if (productSnap.exists()) {
+                        let dbData = productSnap.data();
+                        let size = item.size ? item.size.toLowerCase() : ''; 
+                        
+                         
+                        // скриптът е "умен" и сам търси кое от всичките съществува:
+                        let fieldToUpdate = '';
+                        if (dbData['qty' + size.toUpperCase()] !== undefined) fieldToUpdate = 'qty' + size.toUpperCase(); // Търси qtyS
+                        else if (dbData['qty_' + size] !== undefined) fieldToUpdate = 'qty_' + size; // Търси qty_s
+                        else if (dbData['qty-' + size] !== undefined) fieldToUpdate = 'qty-' + size; // Търси qty-s
+                        else if (dbData['qty'] !== undefined) fieldToUpdate = 'qty'; // Търси обща наличност
+
+                        // Ако намери правилното поле и има останали бройки, вади 1
+                        if (fieldToUpdate && dbData[fieldToUpdate] > 0) {
+                            await updateDoc(productRef, {
+                                [fieldToUpdate]: dbData[fieldToUpdate] - 1
+                            });
+                        }
+                    }
+                }
+
+                // 3. ИЗЧИСТВАМЕ КОЛИЧКАТА
+                localStorage.removeItem('myShoppingCart'); 
                 
-                // Мазната зелена анимация за успех
+                // 4. МАЗНАТА АНИМАЦИЯ ЗА УСПЕХ
                 btn.innerHTML = "✅ ПОРЪЧКАТА Е ПРИЕТА!";
                 btn.style.background = "linear-gradient(135deg, #00e676, #00b259)";
                 btn.style.boxShadow = "0 4px 20px rgba(0, 230, 118, 0.4)";
