@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Store - Завършване на поръчката</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">Fashion<span>Store</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> <span class="desk-text">Начало</span></a>
+            <a href="shop.html" class="nav-btn"><i class="fas fa-tshirt"></i> <span class="desk-text">Магазин</span></a>
+        </div>
+    </header>
+
+    <div class="checkout-container">
+        
+        <div class="checkout-form-section">
+            <h2>Данни за доставка 📦</h2>
+            <form id="checkout-form">
+                <div style="display:flex; gap:15px;">
+                    <div style="flex:1;">
+                        <label>Име и Фамилия</label>
+                        <input type="text" id="order-name" class="premium-input" placeholder="Иван Иванов" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Телефон</label>
+                        <input type="tel" id="order-phone" class="premium-input" placeholder="0888 123 456" required>
+                    </div>
+                </div>
+
+                <label>Държава</label>
+                <select id="order-country" class="premium-input">
+                    <option value="bg">🇧🇬 България</option>
+                </select>
+
+                <label>Град / Село</label>
+                <input type="text" id="order-city" class="premium-input" placeholder="Напр. София" required>
+
+                <label>Адрес за доставка (Еконт/Спиди или точен адрес)</label>
+                <textarea id="order-address" class="premium-input" rows="3" placeholder="Офис на Еконт - Център..." required></textarea>
+
+                <label>Начин на плащане</label>
+                <select id="order-payment" class="premium-input">
+                    <option value="cash">Наложен платеж (В брой при доставка)</option>
+                </select>
+
+                <button type="submit" class="hero-btn" id="place-order-btn" style="width: 100%; justify-content: center; margin-top: 20px;">
+                    ЗАВЪРШИ ПОРЪЧКАТА <i class="fas fa-check"></i>
+                </button>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="shop.html" style="color: #888; text-decoration: none; font-size: 13px; transition: 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">← Обратно към магазина</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="checkout-summary">
+            <h2>Твоята поръчка 🛒</h2>
+            
+            <div id="checkout-items" class="checkout-items-list">
+                <p style="color:#888; text-align:center;">Зареждане...</p>
+            </div>
+            
+            <div class="checkout-total">
+                <span>Общо за плащане:</span>
+                <span id="checkout-total-price">0.00 €</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Взимаме количката
+        let cart = JSON.parse(localStorage.getItem('myShoppingCart')) || [];
+
+        function renderCheckoutCart() {
+            const container = document.getElementById('checkout-items');
+            const totalEl = document.getElementById('checkout-total-price');
+            
+            if (cart.length === 0) {
+                container.innerHTML = '<p style="color:red; text-align:center;">Количката е празна!</p>';
+                document.getElementById('place-order-btn').disabled = true;
+                document.getElementById('place-order-btn').style.background = "#555";
+                return;
+            }
+
+            container.innerHTML = '';
+            let total = 0;
+            
+            cart.forEach(item => {
+                total += item.price;
+                container.innerHTML += `
+                    <div class="checkout-item">
+                        <img src="${item.img}" alt="Дреха">
+                        <div class="checkout-item-info">
+                            <h4>${item.title}</h4>
+                            <p>Размер: <strong>${item.size}</strong></p>
+                            <span class="price">${item.price.toFixed(2)} €</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            totalEl.innerText = total.toFixed(2) + " €";
+        }
+
+        renderCheckoutCart();
+
+        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(cart.length === 0) return alert("Нямате продукти в количката!");
+
+            const btn = document.getElementById('place-order-btn');
+            btn.innerHTML = "⏳ Обработване...";
+            btn.disabled = true;
+
+            const orderData = {
+                name: document.getElementById('order-name').value,
+                phone: document.getElementById('order-phone').value,
+                city: document.getElementById('order-city').value,
+                address: document.getElementById('order-address').value,
+                payment: document.getElementById('order-payment').value,
+                items: cart,
+                total: document.getElementById('checkout-total-price').innerText,
+                date: new Date().toISOString(),
+                status: "Нова"
+            };
+
+            try {
+                await addDoc(collection(db, "orders"), orderData);
+                localStorage.removeItem('myShoppingCart'); // Изчистваме количката
+                
+                // Мазната зелена анимация за успех
+                btn.innerHTML = "✅ ПОРЪЧКАТА Е ПРИЕТА!";
+                btn.style.background = "linear-gradient(135deg, #00e676, #00b259)";
+                btn.style.boxShadow = "0 4px 20px rgba(0, 230, 118, 0.4)";
+                btn.style.color = "white";
+                
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 2500);
+
+            } catch (error) {
+                alert("Грешка при поръчка: " + error.message);
+                btn.innerHTML = "ЗАВЪРШИ ПОРЪЧКАТА <i class='fas fa-check'></i>";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

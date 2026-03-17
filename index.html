@@ -3,199 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gas Monitoring System - MQ135 & MQ6</title>
-    <style>
-        /* Твоят оригинален и подобрен дизайн */
-        body {
-            background-color: #12141d;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 900px;
-            background: #070709;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .status-circle {
-            border: 2px solid #00ff88;
-            display: inline-block;
-            padding: 10px 25px;
-            border-radius: 50px;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
-            transition: all 0.5s ease;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: #252936;
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            transition: transform 0.3s, border 0.3s;
-            border: 1px solid transparent;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .sensor-title {
-            color: #888;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-        }
-
-        .value {
-            font-size: 3.5rem;
-            font-weight: bold;
-            margin: 10px 0;
-            display: block;
-        }
-
-        .unit {
-            font-size: 1.2rem;
-            color: #00ff88;
-        }
-
-        .status-label {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #00ff88;
-            background: rgba(0, 255, 136, 0.1);
-            padding: 5px 15px;
-            border-radius: 10px;
-        }
-
-        .multi-value {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 15px;
-        }
-
-        /* Алармен стил */
-        .danger {
-            border-color: #ff4444 !important;
-            box-shadow: 0 0 20px rgba(255, 68, 68, 0.2);
-        }
-        .danger .status-label {
-            color: #ff4444;
-            background: rgba(255, 68, 68, 0.1);
-        }
-        .danger .unit { color: #ff4444; }
-    </style>
+    <title>Fashion Store - Начало</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
     <header>
-        <div class="status-circle" id="main-status">
-            <span id="status-text" style="color: #00ff88; font-weight: bold;">СИСТЕМАТА Е НОРМАЛНА</span>
+        <div class="logo">Fashion<span>Store</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> Начало</a>
+            <a href="shop.html" class="nav-btn"><i class="fas fa-tshirt"></i> Магазин</a>
+            <a href="login.html" id="auth-btn" class="auth-btn-filled">Вход</a>
         </div>
-        <h1 style="margin-top: 20px;">Мониторинг на Газове</h1>
     </header>
 
-    <div class="dashboard">
-        <div class="card" id="card-mq135">
-            <div class="sensor-title">Сензор MQ-135 (Въздух)</div>
-            <div class="value" id="val-mq135">120</div>
-            <div class="status-label" id="lbl-mq135">Чист въздух</div>
-            <div class="multi-value">
-                <div>
-                    <div style="font-size: 0.7rem; color: #555;">ТИП</div>
-                    <div style="font-size: 0.9rem;">AQI / CO2</div>
-                </div>
-                <div>
-                    <div style="font-size: 0.7rem; color: #555;">ТРЕНД</div>
-                    <div style="font-size: 0.9rem;" id="trend-mq135">Стабилен</div>
-                </div>
-            </div>
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>Новата колекция е тук.</h1>
+            <p>Премиум стрийтуеър дрехи за хора, които не се страхуват да се отличават. Открий своя стил днес.</p>
+            <a href="shop.html" class="hero-btn">ПАЗАРУВАЙ СЕГА <i class="fas fa-arrow-right"></i></a>
         </div>
+    </section>
 
-        <div class="card" id="card-mq6">
-            <div class="sensor-title">Сензор MQ-6 (LPG/Газ)</div>
-            <div class="value" id="val-mq6">25</div>
-            <div class="status-label" id="lbl-mq6">Няма теч</div>
-            <div class="multi-value">
-                <div>
-                    <div style="font-size: 0.7rem; color: #555;">ГАЗ</div>
-                    <div style="font-size: 0.9rem;">Пропан-Бутан</div>
-                </div>
-                <div>
-                    <div style="font-size: 0.7rem; color: #555;">РИСК</div>
-                    <div style="font-size: 0.9rem;" id="risk-mq6">Нисък</div>
-                </div>
-            </div>
+    <section class="features-section">
+        <div class="feature-box">
+            <i class="fas fa-shipping-fast"></i>
+            <h3>Експресна доставка</h3>
+            <p>Получаваш пратката си на следващия работен ден.</p>
         </div>
-    </div>
+        <div class="feature-box">
+            <i class="fas fa-undo-alt"></i>
+            <h3>Лесно връщане</h3>
+            <p>Имаш 14 дни да върнеш продукта без излишни въпроси.</p>
+        </div>
+        <div class="feature-box">
+            <i class="fas fa-lock"></i>
+            <h3>Сигурно плащане</h3>
+            <p>100% защитени транзакции и опция за наложен платеж.</p>
+        </div>
+    </section>
 
-    <div style="text-align: center; color: #444; font-size: 0.8rem;">
-        Данните се обновяват в реално време от сензори MQ-135 и MQ-6
-    </div>
-</div>
-
-<script>
-    // Симулация на данни от сензорите
-    function updateSensors() {
-        // Симулираме стойности от 0 до 1023 (както при Arduino)
-        const mq135Raw = Math.floor(Math.random() * (150 - 100) + 100); // Около 100-150
-        const mq6Raw = Math.floor(Math.random() * (40 - 20) + 20);      // Около 20-40
-
-        // Обновяваме MQ-135 (Въздух)
-        const val135 = document.getElementById('val-mq135');
-        const lbl135 = document.getElementById('lbl-mq135');
-        const card135 = document.getElementById('card-mq135');
-        val135.innerText = mq135Raw;
-
-        if(mq135Raw > 400) {
-            lbl135.innerText = "ЗАМЪРСЕН";
-            card135.classList.add('danger');
-        } else {
-            lbl135.innerText = "ЧИСТ ВЪЗДУХ";
-            card135.classList.remove('danger');
-        }
-
-        // Обновяваме MQ-6 (Газ)
-        const val6 = document.getElementById('val-mq6');
-        const lbl6 = document.getElementById('lbl-mq6');
-        const card6 = document.getElementById('card-mq6');
-        val6.innerText = mq6Raw;
-
-        if(mq6Raw > 300) {
-            lbl6.innerText = "ТЕЧ НА ГАЗ!";
-            card6.classList.add('danger');
-            document.getElementById('status-text').innerText = "ВНИМАНИЕ: ОПАСНОСТ!";
-            document.getElementById('main-status').style.borderColor = "#ff4444";
-            document.getElementById('status-text').style.color = "#ff4444";
-        } else {
-            lbl6.innerText = "НЯМА ТЕЧ";
-            card6.classList.remove('danger');
-        }
-    }
-
-   
-
+</body>
+</html>

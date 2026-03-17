@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Store - Вход</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="display: flex; flex-direction: column; min-height: 100vh;">
+
+    <header>
+        <div class="logo">Fashion<span>Store</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> <span class="desk-text">Начало</span></a>
+            <a href="shop.html" class="nav-btn"><i class="fas fa-tshirt"></i> <span class="desk-text">Магазин</span></a>
+        </div>
+    </header>
+
+    <div class="auth-wrapper">
+        <div class="auth-box">
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Вход</button>
+                <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Регистрация</button>
+            </div>
+
+            <h2 id="auth-title" style="text-align:center; color:#fff; margin-bottom: 25px;">Добре дошли отново!</h2>
+
+            <form id="auth-form">
+                <label>Имейл</label>
+                <input type="email" id="auth-email" class="premium-input" placeholder="вашият@имейл.com" required>
+
+                <label>Парола</label>
+                <input type="password" id="auth-password" class="premium-input" placeholder="••••••••" required minlength="6">
+
+                <button type="submit" class="hero-btn" id="auth-submit-btn" style="width: 100%; justify-content: center; margin-top: 10px;">
+                    ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>
+                </button>
+            </form>
+            
+            <p id="auth-error" style="color: #ff4e00; text-align: center; margin-top: 15px; font-size: 13px; font-weight: 600; display: none;"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        let currentMode = 'login'; // По подразбиране сме на Вход
+
+        // Функция за смяна на табовете (Вход <-> Регистрация)
+        window.switchTab = function(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + mode).classList.add('active');
+            
+            if(mode === 'login') {
+                document.getElementById('auth-title').innerText = "Добре дошли отново!";
+                document.getElementById('auth-submit-btn').innerHTML = 'ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>';
+            } else {
+                document.getElementById('auth-title').innerText = "Създай нов профил";
+                document.getElementById('auth-submit-btn').innerHTML = 'РЕГИСТРИРАЙ СЕ <i class="fas fa-user-plus"></i>';
+            }
+            document.getElementById('auth-error').style.display = 'none';
+        }
+
+        // Обработка на формата
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const btn = document.getElementById('auth-submit-btn');
+            const errorEl = document.getElementById('auth-error');
+            
+            btn.disabled = true;
+            btn.innerHTML = "⏳ Моля изчакайте...";
+            errorEl.style.display = 'none';
+
+            try {
+                if(currentMode === 'login') {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                }
+                
+                // Проверяваме дали идва от количката
+                const returnUrl = localStorage.getItem('returnTo') || 'shop.html';
+                localStorage.removeItem('returnTo');
+                window.location.href = returnUrl;
+
+            } catch (error) {
+                errorEl.innerText = "Грешка: " + error.message;
+                errorEl.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = currentMode === 'login' ? 'ВЛЕЗ В ПРОФИЛА <i class="fas fa-sign-in-alt"></i>' : 'РЕГИСТРИРАЙ СЕ <i class="fas fa-user-plus"></i>';
+            }
+        });
+    </script>
+</body>
+</html>

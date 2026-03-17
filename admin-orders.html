@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ Панел - Поръчки</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">Fashion<span style="color:#d000ff;">Admin</span></div>
+        <div class="nav-links">
+            <a href="shop.html" class="nav-btn"><i class="fas fa-store"></i> <span class="desk-text">Към Магазина</span></a>
+        </div>
+    </header>
+
+    <div class="admin-dashboard">
+        <h1 style="text-align:center; margin-bottom: 30px; color: #fff;">Управление на Поръчки 📦</h1>
+        <div id="orders-container">
+            <p style="text-align:center; color:#888;">Зареждане на поръчките...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // ТВОЯТ FIREBASE
+        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const ADMIN_EMAIL = "admin@fashion.com"; // САМО ТОЗИ ИМЕЙЛ ИМА ДОСТЪП
+
+        // ПРОВЕРКА ЗА ДОСТЪП
+        onAuthStateChanged(auth, (user) => {
+            if (!user || user.email !== ADMIN_EMAIL) {
+                alert("⛔ Достъпът е забранен! Само за администратори.");
+                window.location.href = "index.html";
+            } else {
+                loadOrders(); // Ако е админът, зареждаме поръчките
+            }
+        });
+
+        // ДЪРПАНЕ НА ПОРЪЧКИТЕ ОТ БАЗАТА
+        async function loadOrders() {
+            const container = document.getElementById('orders-container');
+            container.innerHTML = '';
+            
+            try {
+                // Взимаме поръчките и ги подреждаме по дата (най-новите първи)
+                const q = query(collection(db, "orders"), orderBy("date", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p style="text-align:center; color:#fff;">Все още няма направени поръчки.</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    let order = docSnap.data();
+                    let orderId = docSnap.id;
+                    let dateStr = new Date(order.date).toLocaleString('bg-BG');
+
+                    // Генериране на списъка с дрехи за тази поръчка
+                    let itemsHtml = '';
+                    order.items.forEach(item => {
+                        itemsHtml += `
+                            <li>
+                                <img src="${item.img}" alt="img">
+                                <div>
+                                    <div style="color:#fff; font-size:13px; font-weight:bold;">${item.title}</div>
+                                    <div style="color:#aaa; font-size:12px;">Размер: ${item.size} | ${item.price} €</div>
+                                </div>
+                            </li>
+                        `;
+                    });
+
+                    // Цветове за различните статуси
+                    let statusColor = order.status === 'Нова' ? '#00c6ff' : (order.status === 'Изпратена' ? '#d000ff' : '#00e676');
+
+                    const html = `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div><strong style="color:#aaa;">ID:</strong> ${orderId}</div>
+                                <div><strong style="color:#aaa;">Дата:</strong> ${dateStr}</div>
+                                <div>
+                                    <select class="status-select" style="border-color:${statusColor}; color:${statusColor};" onchange="updateOrderStatus('${orderId}', this.value)">
+                                        <option value="Нова" ${order.status === 'Нова' ? 'selected' : ''}>🔵 Нова</option>
+                                        <option value="Изпратена" ${order.status === 'Изпратена' ? 'selected' : ''}>🟣 Изпратена</option>
+                                        <option value="Доставена" ${order.status === 'Доставена' ? 'selected' : ''}>🟢 Доставена</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="order-info">
+                                <div class="order-customer">
+                                    <h3 style="color:#fff; margin-top:0; margin-bottom:15px;">Клиент</h3>
+                                    <p>👤 <strong>Име:</strong> ${order.name}</p>
+                                    <p>📞 <strong>Телефон:</strong> ${order.phone}</p>
+                                    <p>🏙️ <strong>Град:</strong> ${order.city}</p>
+                                    <p>📍 <strong>Адрес:</strong> ${order.address}</p>
+                                    <p>💳 <strong>Плащане:</strong> ${order.payment === 'cash' ? 'Наложен платеж' : 'Карта'}</p>
+                                </div>
+                                
+                                <div class="order-items">
+                                    <h3 style="color:#fff; margin-top:0; margin-bottom:15px;">Продукти</h3>
+                                    <ul>${itemsHtml}</ul>
+                                    <div style="text-align:right; margin-top:10px; font-size:18px; font-weight:bold; color:#d000ff;">
+                                        Общо: ${order.total}
+                                    </div>
+                                    <div class="action-btns" style="justify-content: flex-end;">
+                                        <button class="del-order-btn" onclick="deleteOrder('${orderId}')">🗑️ ИЗТРИЙ ПОРЪЧКАТА</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+
+            } catch (error) {
+                container.innerHTML = `<p style="color:red;">Грешка: ${error.message}</p>`;
+            }
+        }
+
+        // ФУНКЦИЯ ЗА СМЯНА НА СТАТУСА
+        window.updateOrderStatus = async function(id, newStatus) {
+            try {
+                await updateDoc(doc(db, "orders", id), { status: newStatus });
+                // Сменяме цвета на селекта веднага
+                let statusColor = newStatus === 'Нова' ? '#00c6ff' : (newStatus === 'Изпратена' ? '#d000ff' : '#00e676');
+                event.target.style.borderColor = statusColor;
+                event.target.style.color = statusColor;
+            } catch (e) { alert("Грешка при обновяване!"); }
+        }
+
+        // ФУНКЦИЯ ЗА ИЗТРИВАНЕ НА ПОРЪЧКА
+        window.deleteOrder = async function(id) {
+            if(confirm("Сигурен ли си, че искаш да изтриеш тази поръчка завинаги?")) {
+                try {
+                    await deleteDoc(doc(db, "orders", id));
+                    loadOrders(); // Презареждаме списъка
+                } catch (e) { alert("Грешка при изтриване!"); }
+            }
+        }
+    </script>
+</body>
+</html>

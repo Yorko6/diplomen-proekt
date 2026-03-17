@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Store - Shop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+
+    <header>
+        <div class="logo">FashionStore <span id="admin-badge" style="font-size:12px; color:#d000ff; display:none; border:1px solid #d000ff; padding:2px 5px;">ADMIN</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-btn">
+                <i class="fas fa-home"></i> <span class="desk-text">Начало</span>
+            </a>
+            
+            <a onclick="openCartModal()" class="nav-btn" style="position: relative;">
+                <i class="fas fa-shopping-cart"></i> <span class="desk-text">Количка</span>
+                <span id="cart-badge-count" class="cart-count-badge">0</span>
+            </a>
+            
+            <a href="login.html" id="auth-btn" class="auth-btn-filled">Вход</a>
+        </div>
+    </header>
+
+    <div id="admin-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0;">⚡ Админ Панел</h3>
+            <a href="admin-orders.html" style="background:#d000ff; color:white; padding:8px 15px; text-decoration:none; font-weight:bold; border-radius:5px;">📦 ПОРЪЧКИ</a>
+        </div>
+        
+        <div class="admin-form" style="margin-top:15px;">
+            <input type="text" id="new-title" placeholder="Име на продукта">
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="new-price" placeholder="Цена (€)">
+                <input type="number" id="new-discount" placeholder="Отстъпка % (Ако няма, остави празно)">
+            </div>
+            
+            <label>Бройки по размери (Ако няма от даден размер, пиши 0):</label>
+            <div class="qty-inputs">
+                <input type="number" id="new-qty-s" placeholder="S бр." min="0">
+                <input type="number" id="new-qty-m" placeholder="M бр." min="0">
+                <input type="number" id="new-qty-l" placeholder="L бр." min="0">
+                <input type="number" id="new-qty-xl" placeholder="XL бр." min="0">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Пол:</label>
+                    <select id="new-gender"><option value="male">Мъже</option> <option value="female">Жени</option> <option value="unisex">Unisex</option></select>
+                </div>
+                <div style="flex:1;">
+                    <label>Категория:</label>
+                    <select id="new-cat"><option value="tshirt">Тениска</option> <option value="pants">Панталони</option> <option value="jeans">Дънки</option> <option value="hoodie">Суитчър</option></select>
+                </div>
+            </div>
+            <label>Снимка и Описание:</label>
+            <input type="text" id="new-img" placeholder="Снимка (URL)">
+            <textarea id="new-desc" placeholder="Описание..."></textarea>
+            <button id="add-btn" style="background: #28a745; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight:bold; border-radius:5px;">+ ДОБАВИ ПРОДУКТ</button>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <div id="gender-selection" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="cat-btn active" onclick="selectGender('all', this)">ВСИЧКИ</button>
+            <button class="cat-btn" onclick="selectGender('male', this)">МЪЖЕ</button>
+            <button class="cat-btn" onclick="selectGender('female', this)">ЖЕНИ</button>
+            <button class="cat-btn" onclick="selectGender('unisex', this)">УНИСЕКС</button>
+        </div>
+        <div id="categories-wrapper" class="categories" style="display: none;">
+            <button class="cat-btn active" onclick="selectCategory('all', this)">Всички</button>
+            <button class="cat-btn" onclick="selectCategory('tshirt', this)">Тениски</button>
+            <button class="cat-btn" onclick="selectCategory('pants', this)">Панталони</button>
+            <button class="cat-btn" onclick="selectCategory('jeans', this)">Дънки</button>
+            <button class="cat-btn" onclick="selectCategory('hoodie', this)">Суитчъри</button>
+        </div>
+    </div>
+
+    <div class="search-sort-container">
+        <input type="text" id="search-input" placeholder="🔍 Търси продукт по име...">
+        <select id="sort-select">
+            <option value="default">Подреди по: Най-нови</option>
+            <option value="price-asc">Цена: Ниска към Висока</option>
+            <option value="price-desc">Цена: Висока към Ниска</option>
+        </select>
+    </div>
+
+    <div class="products-grid" id="products-container">
+        <p style="text-align:center; width:100%; margin-top:50px; color:#888;">Зареждане...</p>
+    </div>
+
+    <div id="productModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeProductModal()">&times;</span>
+            <div class="pm-left"><img id="pm-img" src=""></div>
+            <div class="pm-right">
+                <h2 id="pm-title" style="color:#f0f0f0;">Title</h2>
+                <div id="pm-price-container" style="margin-bottom:20px;"></div>
+                <p id="pm-desc" style="color:#cccccc; margin-bottom:30px; line-height: 1.6;">...</p>
+                <div>
+                    <span class="size-label">Избери Размер:</span>
+                    <div class="size-options" id="dynamic-size-options"></div>
+                    <input type="hidden" id="selected-size" value="">
+                </div>
+                <button id="add-to-cart-btn" onclick="addProductToCartUI()" style="background:#28a745; color:white; border:none; padding:15px; font-weight:bold; cursor:pointer; width:100%; border-radius:5px;">ДОБАВИ В КОЛИЧКАТА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
+            <h2 style="color:#d000ff; text-align:center; margin-bottom:20px;">✏️ Редактиране</h2>
+            <div class="admin-form">
+                <input type="hidden" id="edit-id">
+                <label>Име:</label> <input type="text" id="edit-title">
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;"><label>Цена (€):</label><input type="number" id="edit-price"></div>
+                    <div style="flex:1;"><label>Отстъпка %:</label><input type="number" id="edit-discount"></div>
+                </div>
+                <label>Наличности по размери (0 = изчерпано):</label>
+                <div class="qty-inputs">
+                    <input type="number" id="edit-qty-s" placeholder="S" min="0">
+                    <input type="number" id="edit-qty-m" placeholder="M" min="0">
+                    <input type="number" id="edit-qty-l" placeholder="L" min="0">
+                    <input type="number" id="edit-qty-xl" placeholder="XL" min="0">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;"><label>Пол:</label><select id="edit-gender"><option value="male">Мъже</option> <option value="female">Жени</option> <option value="unisex">Unisex</option></select></div>
+                    <div style="flex:1;"><label>Вид:</label><select id="edit-cat"><option value="tshirt">Тениска</option> <option value="pants">Панталони</option> <option value="jeans">Дънки</option> <option value="hoodie">Суитчър</option></select></div>
+                </div>
+                <label>Снимка (URL):</label> <input type="text" id="edit-img">
+                <label>Описание:</label> <textarea id="edit-desc"></textarea>
+                <button onclick="saveEditProduct()" style="background: #ffa500; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight:bold; border-radius:5px; margin-top:10px;">💾 ЗАПАЗИ ПРОМЕНИТЕ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cartModal" class="modal-overlay">
+        <div class="modal-content" style="padding: 20px;">
+            <span class="close-modal" onclick="closeCartModal()">&times;</span>
+            <h2 style="border-bottom:1px solid #444; padding-bottom:10px; margin-top:0; color:#f0f0f0;">Твоята Количка 🛒</h2>
+            <div id="cart-items-container" style="max-height:300px; overflow-y:auto; margin:20px 0;"></div>
+            <div style="text-align:right; font-size:20px; font-weight:bold; margin-bottom:20px; color:#f0f0f0;">Общо: <span id="cart-total-price" style="color:#d000ff;">0.00 €</span></div>
+            <button onclick="checkout()" style="width:100%; padding:15px; background:#d000ff; color:white; border:none; font-weight:bold; font-size:18px; cursor:pointer; border-radius:5px;">ПОРЪЧАЙ</button>
+        </div>
+    </div>
+
+    <script type="module" src="shop.js"></script>
+
+</body>
+</html>
