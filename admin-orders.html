@@ -15,17 +15,22 @@
             <a href="shop.html" class="nav-btn"><i class="fas fa-store"></i> <span class="desk-text">Към Магазина</span></a>
         </div>
     </header>
-
-    <div class="admin-dashboard">
+    
+    <div class="admin-dashboard" id="main-admin-content" style="display: none;">
         <h1 style="text-align:center; margin-bottom: 30px; color: #fff;">Управление на Поръчки 📦</h1>
         <div id="orders-container">
             <p style="text-align:center; color:#888;">Зареждане на поръчките...</p>
         </div>
     </div>
 
+    <div id="loading-auth" style="text-align:center; margin-top: 100px; color: #d000ff; font-size: 20px;">
+        <i class="fas fa-spinner fa-spin"></i> Проверка на достъпа...
+    </div>
+
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        // ВАЖНО: Тук сме импортирали абсолютно всичко нужно (включително getDoc)
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ТВОЯТ FIREBASE
@@ -34,7 +39,7 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
-        const ADMIN_EMAIL = "admin@fashion.com"; // САМО ТОЗИ ИМЕЙЛ ИМА ДОСТЪП
+        const ADMIN_EMAIL = "admin@fashion.com";
 
         // ПРОВЕРКА ЗА ДОСТЪП
         onAuthStateChanged(auth, (user) => {
@@ -42,17 +47,18 @@
                 alert("⛔ Достъпът е забранен! Само за администратори.");
                 window.location.href = "index.html";
             } else {
-                loadOrders(); // Ако е админът, зареждаме поръчките
+                document.getElementById('loading-auth').style.display = 'none';
+                document.getElementById('main-admin-content').style.display = 'block';
+                loadOrders(); 
             }
         });
 
-        // ДЪРПАНЕ НА ПОРЪЧКИТЕ ОТ БАЗАТА
+        // ДЪРПАНЕ НА ПОРЪЧКИТЕ
         async function loadOrders() {
             const container = document.getElementById('orders-container');
             container.innerHTML = '';
             
             try {
-                // Взимаме поръчките и ги подреждаме по дата (най-новите първи)
                 const q = query(collection(db, "orders"), orderBy("date", "desc"));
                 const querySnapshot = await getDocs(q);
                 
@@ -66,7 +72,6 @@
                     let orderId = docSnap.id;
                     let dateStr = new Date(order.date).toLocaleString('bg-BG');
 
-                    // Генериране на списъка с дрехи за тази поръчка
                     let itemsHtml = '';
                     order.items.forEach(item => {
                         itemsHtml += `
@@ -80,7 +85,6 @@
                         `;
                     });
 
-                    // Цветове за различните статуси
                     let statusColor = order.status === 'Нова' ? '#00c6ff' : (order.status === 'Изпратена' ? '#d000ff' : '#00e676');
 
                     const html = `
@@ -89,10 +93,10 @@
                                 <div><strong style="color:#aaa;">ID:</strong> ${orderId}</div>
                                 <div><strong style="color:#aaa;">Дата:</strong> ${dateStr}</div>
                                 <div>
-                                    <select class="status-select" style="border-color:${statusColor}; color:${statusColor};" onchange="updateOrderStatus('${orderId}', this.value)">
+                                    <select class="status-select" data-old-value="${order.status}" style="border-color:${statusColor}; color:${statusColor};" onchange="updateOrderStatus('${orderId}', this.value, this)">
                                         <option value="Нова" ${order.status === 'Нова' ? 'selected' : ''}>🔵 Нова</option>
                                         <option value="Изпратена" ${order.status === 'Изпратена' ? 'selected' : ''}>🟣 Изпратена</option>
-                                        <option value="Доставена" ${order.status === 'Доставена' ? 'selected' : ''}>🟢 Доставена</option>
+                                        <option value="Доставена" ${order.status === 'Доставена' ? 'selected' : ''}>🟢 Доставена (Изтрива)</option>
                                     </select>
                                 </div>
                             </div>
@@ -128,23 +132,74 @@
             }
         }
 
-        // ФУНКЦИЯ ЗА СМЯНА НА СТАТУСА
-        window.updateOrderStatus = async function(id, newStatus) {
+        // ФУНКЦИЯТА, КОЯТО НАМАЛЯВА НАЛИЧНОСТИТЕ И ТРИЕ
+        window.updateOrderStatus = async function(id, newStatus, selectElement) {
             try {
-                await updateDoc(doc(db, "orders", id), { status: newStatus });
-                // Сменяме цвета на селекта веднага
-                let statusColor = newStatus === 'Нова' ? '#00c6ff' : (newStatus === 'Изпратена' ? '#d000ff' : '#00e676');
-                event.target.style.borderColor = statusColor;
-                event.target.style.color = statusColor;
-            } catch (e) { alert("Грешка при обновяване!"); }
+                if (newStatus === 'Доставена') {
+                    if(!confirm("Сигурен ли си? Това ще намали наличностите с 1 и ще изтрие поръчката!")) {
+                        selectElement.value = selectElement.getAttribute('data-old-value'); 
+                        return;
+                    }
+
+                    // 1. Взимаме поръчката
+                    const orderRef = doc(db, "orders", id);
+                    const orderSnap = await getDoc(orderRef);
+
+                    if (orderSnap.exists()) {
+                        const orderData = orderSnap.data();
+
+                        // 2. Намаляваме наличностите на дрехите
+                        if (orderData.items) {
+                            for (const item of orderData.items) {
+                                const originalProductId = String(item.id).split('-')[0];
+                                const productRef = doc(db, "products", originalProductId);
+                                const productSnap = await getDoc(productRef);
+
+                                if (productSnap.exists()) {
+                                    let dbData = productSnap.data();
+                                    let size = item.size ? String(item.size).toLowerCase() : '';
+
+                                    let fieldToUpdate = '';
+                                    if (dbData['qty' + size.toUpperCase()] !== undefined) fieldToUpdate = 'qty' + size.toUpperCase();
+                                    else if (dbData['qty_' + size] !== undefined) fieldToUpdate = 'qty_' + size;
+                                    else if (dbData['qty-' + size] !== undefined) fieldToUpdate = 'qty-' + size;
+                                    else if (dbData['qty'] !== undefined) fieldToUpdate = 'qty';
+
+                                    if (fieldToUpdate && dbData[fieldToUpdate] > 0) {
+                                        await updateDoc(productRef, {
+                                            [fieldToUpdate]: dbData[fieldToUpdate] - 1
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Изтриваме поръчката
+                    await deleteDoc(orderRef);
+                    loadOrders(); 
+                    setTimeout(() => alert("✅ Поръчката е успешно доставена и инвентарът е намален!"), 300);
+
+                } else {
+                    // АКО СМЕНЯМЕ САМО СТАТУСА (Без да трием)
+                    await updateDoc(doc(db, "orders", id), { status: newStatus });
+                    selectElement.setAttribute('data-old-value', newStatus); 
+                    
+                    let statusColor = newStatus === 'Нова' ? '#00c6ff' : '#d000ff';
+                    selectElement.style.borderColor = statusColor;
+                    selectElement.style.color = statusColor;
+                }
+            } catch (e) { 
+                console.error("ТЕХНИЧЕСКА ГРЕШКА:", e); 
+                alert("Грешка в системата: " + e.message); 
+            }
         }
 
-        // ФУНКЦИЯ ЗА ИЗТРИВАНЕ НА ПОРЪЧКА
         window.deleteOrder = async function(id) {
             if(confirm("Сигурен ли си, че искаш да изтриеш тази поръчка завинаги?")) {
                 try {
                     await deleteDoc(doc(db, "orders", id));
-                    loadOrders(); // Презареждаме списъка
+                    loadOrders(); 
                 } catch (e) { alert("Грешка при изтриване!"); }
             }
         }
