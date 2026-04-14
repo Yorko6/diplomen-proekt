@@ -145,7 +145,10 @@ window.openCartModal = function() {
 }
 window.closeCartModal = function() { document.getElementById('cartModal').style.display = 'none'; }
 
-window.openProductModal = function(product) {
+window.openProductModal = function(productOrId) {
+    // Ако бутонът е изпратил само ID (текст), намираме целия продукт от масива
+    let product = typeof productOrId === 'string' ? allProducts.find(p => p.id === productOrId) : productOrId;
+    if (!product) return; // Застраховка
     currentOpenProduct = product;
     document.getElementById('pm-img').src = product.img;
     document.getElementById('pm-title').innerText = product.title;
