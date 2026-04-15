@@ -24,8 +24,57 @@ header { display: flex; justify-content: space-between; padding: 15px 40px; back
 .auth-btn-filled { background: linear-gradient(135deg, #d000ff, #ff007f); color: white !important; border: none; padding: 10px 25px; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 14px; text-transform: uppercase; transition: 0.3s; box-shadow: 0 4px 15px rgba(208, 0, 255, 0.4); }
 .auth-btn-filled:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 0, 127, 0.6); }
 
-.premium-input { width: 100%; padding: 14px; background: #1a1a24; color: #fff; border: 1px solid #2a2a36; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-family: 'Poppins', sans-serif; transition: all 0.3s ease; box-sizing: border-box; }
-.premium-input:focus { outline: none; background: #15151e; border-color: #d000ff; box-shadow: 0 0 15px rgba(208, 0, 255, 0.2); }
+/* --- ГЛОБАЛНИ СТИЛОВЕ ЗА ВСИЧКИ ПОЛЕТА, ОПИСАНИЯ И МЕНЮТА --- */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    width: 100%;
+    padding: 14px 15px;
+    background-color: #15151e !important; /* Тъмен матов фон */
+    color: #ffffff !important; /* Кристално бял текст */
+    border: 1px solid #333333 !important; /* Тъмна рамка */
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+/* Специално за падащите менюта - да са тъмни отвътре, като ги цъкнеш */
+select option {
+    background-color: #15151e !important;
+    color: #ffffff !important;
+}
+
+/* Специално за описанието - да е малко по-високо и да може да се разтяга */
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Когато цъкнеш вътре да пишеш или избираш (Focus) */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    border-color: #d000ff !important; /* Лилавият неон */
+    box-shadow: 0 0 10px rgba(208, 0, 255, 0.2) !important;
+    background-color: #1a1a24 !important;
+}
+
+/* Подсказките вътре в полетата */
+input::placeholder,
+textarea::placeholder {
+    color: #666666 !important;
+}
 
 .hero-btn { background: linear-gradient(135deg, #d000ff, #ff007f); color: white; padding: 18px 45px; text-decoration: none; font-size: 16px; font-weight: 700; border-radius: 30px; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(208, 0, 255, 0.4); text-transform: uppercase; border: none; cursor: pointer; }
 .hero-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(255, 0, 127, 0.6); }
