@@ -1,180 +1,522 @@
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fashion Store - Shop</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css"> 
-</head>
-<body>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    <header>
-        <div class="logo">FashionStore <span id="admin-badge" style="font-size:12px; color:#d000ff; display:none; border:1px solid #d000ff; padding:2px 5px;">ADMIN</span></div>
-        <div class="nav-links">
-            <a href="index.html" class="nav-btn">
-                <i class="fas fa-home"></i> <span class="desk-text">Начало</span>
-            </a>
-            
-            <a onclick="openCartModal()" class="nav-btn" style="position: relative;">
-                <i class="fas fa-shopping-cart"></i> <span class="desk-text">Количка</span>
-                <span id="cart-badge-count" class="cart-count-badge">0</span>
-            </a>
-            
-            <a href="login.html" id="auth-btn" class="auth-btn-filled">Вход</a>
-        </div>
-    </header>
+const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b", measurementId: "G-Z44LH253C4" };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const ADMIN_EMAIL = "admin@fashion.com";
 
-    <div id="admin-panel" style="display: none; background: #1a1a24; border: 2px solid #d000ff; border-radius: 12px; padding: 25px; max-width: 800px; margin: 40px auto; font-family: 'Poppins', sans-serif;">
+let allProducts = []; 
+let currentUser = null;
+let currentOpenProduct = null;
+let cart = JSON.parse(localStorage.getItem('myShoppingCart')) || [];
+let state = { gender: 'all', category: 'all', search: '', sort: 'default' };
+
+onAuthStateChanged(auth, (user) => {
+    const authBtn = document.getElementById('auth-btn');
+    const adminPanel = document.getElementById('admin-panel');
+    const adminBadge = document.getElementById('admin-badge');
+
+    if (user) {
+        currentUser = user;
+        
+        // 1. Сменяме бутона на ИЗХОД
+        if(authBtn) { 
+            authBtn.innerText = "ИЗХОД"; 
+            authBtn.onclick = () => { signOut(auth).then(() => window.location.reload()); }; 
+            authBtn.href = "#"; // Махаме линка, за да не го праща никъде при изход
+        }
+        
+        // 2. ПРОВЕРКА ЗА АДМИН
+        if(user.email === ADMIN_EMAIL) {
+            // Ако е шефът -> Показваме тайните неща (ако ги има на страницата)
+            if (adminPanel) adminPanel.style.display = 'block';
+            if (adminBadge) adminBadge.style.display = 'inline-block';
+        } else {
+            // АКО Е ОБИКНОВЕН КЛИЕНТ -> Твърдо КРИЕМ админ панела! (Тук ти беше пропускът)
+            if (adminPanel) adminPanel.style.display = 'none';
+            if (adminBadge) adminBadge.style.display = 'none';
+        }
+        
+    } else {
+        // АКО НЯМА ВЛЯЗЪЛ ЧОВЕК (ГОСТ)
+        currentUser = null;
+        
+        // 1. Връщаме бутона на ВХОД
+        if(authBtn) { 
+            authBtn.innerText = "ВХОД"; 
+            authBtn.href = "login.html"; 
+            authBtn.onclick = null; 
+        }
+        
+        // 2. Твърдо КРИЕМ админ панела за гости
+        if (adminPanel) adminPanel.style.display = 'none';
+        if (adminBadge) adminBadge.style.display = 'none';
+    }
+
+    // Зареждаме продуктите и количката
+    if (typeof loadProductsFromDB === "function") loadProductsFromDB(); 
+    if (typeof window.updateCartCount === "function") window.updateCartCount();
+});
+
+window.applyFilters = function() {
+    let filtered = allProducts;
+    if (state.gender !== 'all') { filtered = filtered.filter(p => p.gender === state.gender || p.gender === 'unisex' || !p.gender); }
+    if (state.category !== 'all') { filtered = filtered.filter(p => p.category === state.category); }
+    if (state.search !== '') { filtered = filtered.filter(p => p.title.toLowerCase().includes(state.search)); }
+
+    filtered.sort((a, b) => {
+        let realPriceA = a.discount > 0 ? a.price - (a.price * (a.discount / 100)) : a.price;
+        let realPriceB = b.discount > 0 ? b.price - (b.price * (b.discount / 100)) : b.price;
+        if (state.sort === 'price-asc') return realPriceA - realPriceB;
+        if (state.sort === 'price-desc') return realPriceB - realPriceA;
+        return 0; 
+    });
+
+    renderProducts(filtered);
+}
+
+window.selectGender = function(gender, btn) {
+    document.querySelectorAll('#gender-selection .cat-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-        <h3 style="color: #fff; margin: 0; font-size: 18px;">⚡ Админ Панел</h3>
-        <a href="admin-orders.html" style="background: #d000ff; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 5px;">📦 ПОРЪЧКИ</a>
-    </div>
+    state.gender = gender;
+    document.getElementById('categories-wrapper').style.display = 'flex';
+    
+    document.querySelectorAll('#categories-wrapper .cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#categories-wrapper .cat-btn:first-child').classList.add('active');
+    state.category = 'all';
+    
+    window.applyFilters();
+}
 
-    <div style="display: flex; flex-direction: column; gap: 15px;">
+window.selectCategory = function(category, btn) {
+    document.querySelectorAll('#categories-wrapper .cat-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    state.category = category;
+    window.applyFilters();
+}
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+    state.search = e.target.value.toLowerCase().trim();
+    window.applyFilters();
+});
+document.getElementById('sort-select').addEventListener('change', (e) => {
+    state.sort = e.target.value;
+    window.applyFilters();
+});
+
+window.updateCartCount = function() {
+    const el = document.getElementById('cart-badge-count');
+    if(el) { el.innerText = cart.length; el.style.display = cart.length > 0 ? 'inline-flex' : 'none'; }
+}
+window.saveCart = function() { localStorage.setItem('myShoppingCart', JSON.stringify(cart)); window.updateCartCount(); }
+window.addToCart = function(title, price, img, size) {
+    cart.push({ id: Date.now(), title, price: Number(price), img, size });
+    window.saveCart(); alert(`✅ Добавено: ${title}`);
+}
+window.removeFromCart = function(index) { cart.splice(index, 1); window.saveCart(); window.openCartModal(); }
+
+window.openCartModal = function() {
+    const container = document.getElementById('cart-items-container');
+    const totalEl = document.getElementById('cart-total-price');
+    container.innerHTML = '';
+    let total = 0;
+    if (cart.length === 0) container.innerHTML = '<p style="text-align:center; color:#cccccc; padding:20px;">Количката е празна.</p>';
+    else {
+        cart.forEach((item, index) => {
+            total += item.price;
+            container.innerHTML += `
+                <div style="display:flex; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+                    <img src="${item.img}" style="width:50px; height:50px; object-fit:cover; border-radius:5px; margin-right:15px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:bold; color:#f0f0f0;">${item.title}</div>
+                        <div style="font-size:12px; color:#cccccc;">Размер: ${item.size}</div>
+                        <div style="color:#d000ff;">${item.price.toFixed(2)} €</div>
+                    </div>
+                    <button onclick="removeFromCart(${index})" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">X</button>
+                </div>`;
+        });
+    }
+    totalEl.innerText = total.toFixed(2) + " €";
+    document.getElementById('cartModal').style.display = 'block';
+}
+window.closeCartModal = function() { document.getElementById('cartModal').style.display = 'none'; }
+
+window.openProductModal = function(product) {
+    currentOpenProduct = product;
+    document.getElementById('pm-img').src = product.img;
+    document.getElementById('pm-title').innerText = product.title;
+    
+    const priceContainer = document.getElementById('pm-price-container');
+    if (product.discount > 0) {
+        let finalPrice = product.price - (product.price * (product.discount / 100));
+        priceContainer.innerHTML = `
+            <span style="text-decoration:line-through; color:#666; font-size:18px;">${product.price} €</span>
+            <span style="color:red; font-size:28px; font-weight:bold; margin-left:10px;">${finalPrice.toFixed(2)} €</span>
+            <span style="background:red; color:white; padding:2px 6px; border-radius:5px; font-size:14px; vertical-align:middle;">-${product.discount}%</span>
+        `;
+        currentOpenProduct.realPrice = finalPrice;
+    } else {
+        priceContainer.innerHTML = `<span style="color:#d000ff; font-size:24px; font-weight:bold;">${product.price} €</span>`;
+        currentOpenProduct.realPrice = product.price;
+    }
+
+    document.getElementById('pm-desc').innerText = product.description || "Няма описание.";
+    
+    const sizeContainer = document.getElementById('dynamic-size-options');
+    sizeContainer.innerHTML = '';
+    
+    const sizesObj = product.sizes || { S: 1, M: 1, L: 1, XL: 1 };
+    let firstAvailableSize = null;
+
+    ['S', 'M', 'L', 'XL'].forEach(sz => {
+        const qty = Number(sizesObj[sz]) || 0;
+        const btn = document.createElement('div');
         
-        <div>
-            <input type="text" id="new-title" placeholder="Име на продукта" style="width: 100%; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; box-sizing: border-box; outline: none;">
-        </div>
+        if (qty > 0 || !product.sizes) {
+            btn.className = 'size-btn';
+            btn.innerText = sz;
+            btn.onclick = () => window.selectSize(btn, sz);
+            if(!firstAvailableSize) { firstAvailableSize = btn; document.getElementById('selected-size').value = sz; }
+        } else {
+            btn.className = 'size-btn disabled';
+            btn.innerText = sz;
+        }
+        sizeContainer.appendChild(btn);
+    });
 
-        <div style="display: flex; gap: 15px;">
-            <div style="flex: 1;">
-                <input type="number" id="new-price" placeholder="Цена (€)" style="width: 100%; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; box-sizing: border-box; outline: none;">
-            </div>
-            <div style="flex: 1;">
-                <input type="number" id="new-discount" placeholder="Отстъпка %" style="width: 100%; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; box-sizing: border-box; outline: none;">
-            </div>
-        </div>
+    const addBtn = document.getElementById('add-to-cart-btn');
+    if (firstAvailableSize) {
+        firstAvailableSize.classList.add('active'); 
+        addBtn.disabled = false; addBtn.innerText = "ДОБАВИ В КОЛИЧКАТА"; addBtn.style.background = "#28a745";
+    } else {
+        document.getElementById('selected-size').value = "";
+        addBtn.disabled = true; addBtn.innerText = "ИЗЧЕРПАНА НАЛИЧНОСТ"; addBtn.style.background = "#555";
+    }
+    document.getElementById('productModal').style.display = "block";
+}
+window.closeProductModal = function() { document.getElementById('productModal').style.display = "none"; }
 
-        <div>
-            <label style="color: #d000ff; font-size: 13px; font-weight: bold; margin-bottom: 8px; display: block;">Бройки по размери:</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="number" id="new-qty-s" placeholder="S бр." min="0" style="flex: 1; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; text-align: center; outline: none;">
-                <input type="number" id="new-qty-m" placeholder="M бр." min="0" style="flex: 1; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; text-align: center; outline: none;">
-                <input type="number" id="new-qty-l" placeholder="L бр." min="0" style="flex: 1; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; text-align: center; outline: none;">
-                <input type="number" id="new-qty-xl" placeholder="XL бр." min="0" style="flex: 1; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; text-align: center; outline: none;">
-            </div>
-        </div>
+window.selectSize = function(element, size) {
+    document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+    if(element) element.classList.add('active');
+    document.getElementById('selected-size').value = size;
+}
 
-        <div style="display: flex; gap: 15px;">
-            <div style="flex: 1;">
-                <label style="color: #d000ff; font-size: 13px; font-weight: bold; margin-bottom: 8px; display: block;">Пол:</label>
-                <select id="new-gender" style="width: 100%; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; outline: none; cursor: pointer;">
-                    <option value="male">Мъже</option>
-                    <option value="female">Жени</option>
-                    <option value="unisex">Унисекс</option>
-                </select>
-            </div>
-            <div style="flex: 1;">
-                <label style="color: #d000ff; font-size: 13px; font-weight: bold; margin-bottom: 8px; display: block;">Категория:</label>
-                <select id="new-cat" style="width: 100%; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; outline: none; cursor: pointer;">
-                    <option value="tshirt">Тениска</option>
-                    <option value="pants">Панталони</option>
-                    <option value="jeans">Дънки</option>
-                    <option value="hoodie">Суитчър</option>
-                </select>
-            </div>
-        </div>
+window.addProductToCartUI = function() {
+    const size = document.getElementById('selected-size').value;
+    if(!size) return alert("Моля, изберете размер!");
+    let priceToAdd = currentOpenProduct.realPrice || currentOpenProduct.price;
+    window.addToCart(currentOpenProduct.title, priceToAdd, currentOpenProduct.img, size);
+    window.closeProductModal();
+}
 
-        <div>
-            <label style="color: #d000ff; font-size: 13px; font-weight: bold; margin-bottom: 8px; display: block;">Снимка и Описание:</label>
-            <input type="text" id="new-img" placeholder="Снимка (URL)" style="width: 100%; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none;">
-            <textarea id="new-desc" placeholder="Описание..." rows="3" style="width: 100%; padding: 12px; background: #2a2a36; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; box-sizing: border-box; resize: vertical; outline: none;"></textarea>
-        </div>
+window.openEditModal = function(id) {
+    const product = allProducts.find(p => p.id === id);
+    if(!product) return;
 
-        <button id="add-btn" style="background: #66bb6a; color: white; border: none; padding: 15px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; width: 100%; margin-top: 5px; transition: 0.3s;" onmouseover="this.style.background='#55a059'" onmouseout="this.style.background='#66bb6a'">+ ДОБАВИ ПРОДУКТ</button>
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-title').value = product.title;
+    document.getElementById('edit-price').value = product.price;
+    document.getElementById('edit-discount').value = product.discount || 0;
+    
+    const sizes = product.sizes || { S: 0, M: product.qty || 0, L: 0, XL: 0 };
+    document.getElementById('edit-qty-s').value = sizes.S || 0;
+    document.getElementById('edit-qty-m').value = sizes.M || 0;
+    document.getElementById('edit-qty-l').value = sizes.L || 0;
+    document.getElementById('edit-qty-xl').value = sizes.XL || 0;
+
+    document.getElementById('edit-gender').value = product.gender || 'unisex';
+    document.getElementById('edit-cat').value = product.category;
+    document.getElementById('edit-img').value = product.img;
+    document.getElementById('edit-desc').value = product.description || "";
+
+    document.getElementById('editModal').style.display = 'block';
+}
+
+window.saveEditProduct = async function() {
+    const id = document.getElementById('edit-id').value;
+    const title = document.getElementById('edit-title').value;
+    const price = Number(document.getElementById('edit-price').value);
+    const discount = Number(document.getElementById('edit-discount').value);
+    
+    const qtyS = Number(document.getElementById('edit-qty-s').value) || 0;
+    const qtyM = Number(document.getElementById('edit-qty-m').value) || 0;
+    const qtyL = Number(document.getElementById('edit-qty-l').value) || 0;
+    const qtyXL = Number(document.getElementById('edit-qty-xl').value) || 0;
+    const totalQty = qtyS + qtyM + qtyL + qtyXL;
+    const sizesObj = { S: qtyS, M: qtyM, L: qtyL, XL: qtyXL };
+
+    const gender = document.getElementById('edit-gender').value;
+    const cat = document.getElementById('edit-cat').value;
+    const img = document.getElementById('edit-img').value;
+    const desc = document.getElementById('edit-desc').value;
+
+    try {
+        await updateDoc(doc(db, "products", id), {
+            title, price, discount, qty: totalQty, sizes: sizesObj, gender, category: cat, img, description: desc
+        });
+        alert("✅ Промените са запазени!");
+        document.getElementById('editModal').style.display = 'none';
+        loadProductsFromDB();
+    } catch (e) { alert("Грешка при редакция: " + e.message); }
+}
+
+window.checkout = function() {
+    if(cart.length === 0) return alert("Количката е празна!");
+    if (!currentUser) {
+        if(confirm("За да поръчате, трябва да влезете в профила си. Да отидем ли към Вход/Регистрация?")) {
+            localStorage.setItem('returnTo', 'checkout.html'); window.location.href = "login.html";
+        }
+    } else { window.location.href = "checkout.html"; }
+}
+
+async function loadProductsFromDB() {
+    allProducts = []; 
+    try {
+        const querySnapshot = await getDocs(collection(db, "products"));
+        querySnapshot.forEach((doc) => { let data = doc.data(); data.id = doc.id; allProducts.push(data); });
+        window.applyFilters(); 
+    } catch (error) { console.error(error); }
+}
+
+function renderProducts(productsToRender) {
+    const container = document.getElementById('products-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (productsToRender.length === 0) {
+        container.innerHTML = '<p style="color:#888; text-align:center; width: 100%;">Няма намерени продукти.</p>';
+        return;
+    }
+
+    productsToRender.forEach(p => {
+        let s = Number(p.qtyS || p.qty_s || p['qty-s'] || p.new_qty_s || 0);
+        let m = Number(p.qtyM || p.qty_m || p['qty-m'] || p.new_qty_m || 0);
+        let l = Number(p.qtyL || p.qty_l || p['qty-l'] || p.new_qty_l || 0);
+        let xl = Number(p.qtyXL || p.qty_xl || p['qty-xl'] || p.new_qty_xl || 0);
         
-    </div>
-</div>
+        let totalQty = s + m + l + xl;
+        
+        if (totalQty === 0 && p.qty) {
+            totalQty = Number(p.qty);
+        }
 
-    <div style="text-align: center; margin-top: 20px;">
-        <div id="gender-selection" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-            <button class="cat-btn active" onclick="selectGender('all', this)">ВСИЧКИ</button>
-            <button class="cat-btn" onclick="selectGender('male', this)">МЪЖЕ</button>
-            <button class="cat-btn" onclick="selectGender('female', this)">ЖЕНИ</button>
-            <button class="cat-btn" onclick="selectGender('unisex', this)">УНИСЕКС</button>
-        </div>
-        <div id="categories-wrapper" class="categories" style="display: none;">
-            <button class="cat-btn active" onclick="selectCategory('all', this)">Всички</button>
-            <button class="cat-btn" onclick="selectCategory('tshirt', this)">Тениски</button>
-            <button class="cat-btn" onclick="selectCategory('pants', this)">Панталони</button>
-            <button class="cat-btn" onclick="selectCategory('jeans', this)">Дънки</button>
-            <button class="cat-btn" onclick="selectCategory('hoodie', this)">Суитчъри</button>
-        </div>
-    </div>
+        let badgeHtml = '';
+        if (totalQty > 0) {
+            badgeHtml = `<div class="qty-badge" style="background: #1a1a24; color: #aaa; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; position: absolute; top: 15px; right: 15px; z-index: 10; border: 1px solid #333;">Налично: ${totalQty}</div>`;
+        } else {
+            badgeHtml = `<div class="qty-badge" style="background: #ff1744; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; position: absolute; top: 15px; right: 15px; z-index: 10; box-shadow: 0 4px 10px rgba(255, 23, 68, 0.4);">ИЗЧЕРПАНО</div>`;
+        }
 
-    <div class="search-sort-container">
-        <input type="text" id="search-input" placeholder="🔍 Търси продукт по име...">
-        <select id="sort-select">
-            <option value="default">Подреди по: Най-нови</option>
-            <option value="price-asc">Цена: Ниска към Висока</option>
-            <option value="price-desc">Цена: Висока към Ниска</option>
-        </select>
-    </div>
-
-    <div class="products-grid" id="products-container">
-        <p style="text-align:center; width:100%; margin-top:50px; color:#888;">Зареждане...</p>
-    </div>
-
-    <div id="productModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeProductModal()">&times;</span>
-            <div class="pm-left"><img id="pm-img" src=""></div>
-            <div class="pm-right">
-                <h2 id="pm-title" style="color:#f0f0f0;">Title</h2>
-                <div id="pm-price-container" style="margin-bottom:20px;"></div>
-                <p id="pm-desc" style="color:#cccccc; margin-bottom:30px; line-height: 1.6;">...</p>
-                <div>
-                    <span class="size-label">Избери Размер:</span>
-                    <div class="size-options" id="dynamic-size-options"></div>
-                    <input type="hidden" id="selected-size" value="">
+        let adminButtons = '';
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.email === ADMIN_EMAIL) {
+            adminButtons = `
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button onclick="editProduct('${p.id}')" style="background: #ffa500; color: #000; border: none; padding: 8px; flex: 1; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                        <i class="fas fa-edit"></i> 
+                    </button>
+                    <button onclick="deleteProduct('${p.id}')" style="background: #ff4757; color: #fff; border: none; padding: 8px; flex: 1; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                        <i class="fas fa-trash"></i> 
+                    </button>
                 </div>
-                <button id="add-to-cart-btn" onclick="addProductToCartUI()" style="background:#28a745; color:white; border:none; padding:15px; font-weight:bold; cursor:pointer; width:100%; border-radius:5px;">ДОБАВИ В КОЛИЧКАТА</button>
+            `;
+        }
+
+        // ВЪРНАТ Е ТВОЯТ НАЧИН С data-id="${p.id}"
+        const html = `
+            <div class="product-card" style="position: relative;">
+                ${badgeHtml}
+                <div class="product-img-wrapper">
+                    <img src="${p.img}" alt="${p.title}">
+                </div>
+                <h3>${p.title}</h3>
+                <div style="margin-bottom: 15px;">
+                    <span style="color: #d000ff; font-weight: bold; font-size: 18px;">${p.price} €</span>
+                </div>
+                
+                ${totalQty > 0 ? `<button class="open-modal-btn" data-id="${p.id}">ВИЖ ОПЦИИ</button>` : `<button class="open-modal-btn" style="background: #333; border-color: #444; color: #888; cursor: not-allowed;" disabled>Няма наличност</button>`}
+                
+                ${adminButtons}
             </div>
-        </div>
-    </div>
+        `;
+        container.innerHTML += html;
+    });
 
-    <div id="editModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
-            <span class="close-modal" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
-            <h2 style="color:#d000ff; text-align:center; margin-bottom:20px;">✏️ Редактиране</h2>
-            <div class="admin-form">
-                <input type="hidden" id="edit-id">
-                <label>Име:</label> <input type="text" id="edit-title">
-                <div style="display:flex; gap:10px;">
-                    <div style="flex:1;"><label>Цена (€):</label><input type="number" id="edit-price"></div>
-                    <div style="flex:1;"><label>Отстъпка %:</label><input type="number" id="edit-discount"></div>
-                </div>
-                <label>Наличности по размери (0 = изчерпано):</label>
-                <div class="qty-inputs">
-                    <input type="number" id="edit-qty-s" placeholder="S" min="0">
-                    <input type="number" id="edit-qty-m" placeholder="M" min="0">
-                    <input type="number" id="edit-qty-l" placeholder="L" min="0">
-                    <input type="number" id="edit-qty-xl" placeholder="XL" min="0">
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <div style="flex:1;"><label>Пол:</label><select id="edit-gender"><option value="male">Мъже</option> <option value="female">Жени</option> <option value="unisex">Unisex</option></select></div>
-                    <div style="flex:1;"><label>Вид:</label><select id="edit-cat"><option value="tshirt">Тениска</option> <option value="pants">Панталони</option> <option value="jeans">Дънки</option> <option value="hoodie">Суитчър</option></select></div>
-                </div>
-                <label>Снимка (URL):</label> <input type="text" id="edit-img">
-                <label>Описание:</label> <textarea id="edit-desc"></textarea>
-                <button onclick="saveEditProduct()" style="background: #ffa500; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight:bold; border-radius:5px; margin-top:10px;">💾 ЗАПАЗИ ПРОМЕНИТЕ</button>
-            </div>
-        </div>
-    </div>
+    // === ТВОЯТ ОРИГИНАЛЕН КОД ЗА ЗАКАЧАНЕ НА СЪБИТИЯТА ===
+    document.querySelectorAll('.open-modal-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (id) {
+                const product = allProducts.find(p => p.id === id);
+                // Извикваме твоята функция с целия обект
+                if (typeof window.openProductModal === 'function') {
+                    window.openProductModal(product);
+                } else if (typeof openProductModal === 'function') {
+                    openProductModal(product);
+                }
+            }
+        });
+    });
+}
 
-    <div id="cartModal" class="modal-overlay">
-        <div class="modal-content" style="padding: 20px;">
-            <span class="close-modal" onclick="closeCartModal()">&times;</span>
-            <h2 style="border-bottom:1px solid #444; padding-bottom:10px; margin-top:0; color:#f0f0f0;">Твоята Количка 🛒</h2>
-            <div id="cart-items-container" style="max-height:300px; overflow-y:auto; margin:20px 0;"></div>
-            <div style="text-align:right; font-size:20px; font-weight:bold; margin-bottom:20px; color:#f0f0f0;">Общо: <span id="cart-total-price" style="color:#d000ff;">0.00 €</span></div>
-            <button onclick="checkout()" style="width:100%; padding:15px; background:#d000ff; color:white; border:none; font-weight:bold; font-size:18px; cursor:pointer; border-radius:5px;">ПОРЪЧАЙ</button>
-        </div>
-    </div>
 
-    <script type="module" src="shop.js"></script>
 
-</body>
-</html>
+    document.querySelectorAll('.open-modal-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = e.target.getAttribute('data-id'); const product = allProducts.find(p => p.id === id); window.openProductModal(product); }));
+    if (currentUser && currentUser.email === ADMIN_EMAIL) {
+        document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', async (e) => { if(confirm("Изтриване?")) { await deleteDoc(doc(db, "products", e.target.getAttribute('data-id'))); loadProductsFromDB(); } }));
+    }
+
+
+document.getElementById('add-btn').addEventListener('click', async () => {
+    const title = document.getElementById('new-title').value;
+    const price = document.getElementById('new-price').value;
+    const discount = document.getElementById('new-discount').value || 0;
+    
+    const qtyS = Number(document.getElementById('new-qty-s').value) || 0;
+    const qtyM = Number(document.getElementById('new-qty-m').value) || 0;
+    const qtyL = Number(document.getElementById('new-qty-l').value) || 0;
+    const qtyXL = Number(document.getElementById('new-qty-xl').value) || 0;
+    const totalQty = qtyS + qtyM + qtyL + qtyXL;
+    const sizesObj = { S: qtyS, M: qtyM, L: qtyL, XL: qtyXL };
+
+    const gender = document.getElementById('new-gender').value;
+    const cat = document.getElementById('new-cat').value;
+    const img = document.getElementById('new-img').value;
+    const desc = document.getElementById('new-desc').value;
+
+    if (!title || !price) { alert("Моля, попълнете поне ИМЕ и ЦЕНА!"); return; }
+    
+    try {
+        const btn = document.getElementById('add-btn'); btn.innerText = "⏳ Качва се..."; btn.disabled = true;
+        
+        await addDoc(collection(db, "products"), { 
+            title, price: Number(price), discount: Number(discount), 
+            qty: totalQty, sizes: sizesObj, gender, category: cat, img, description: desc || "Няма описание." 
+        });
+        
+        alert("✅ УСПЕШНО ДОБАВЕНО!");
+        
+        document.getElementById('new-title').value = ''; document.getElementById('new-price').value = ''; document.getElementById('new-discount').value = '';
+        document.getElementById('new-qty-s').value = ''; document.getElementById('new-qty-m').value = ''; document.getElementById('new-qty-l').value = ''; document.getElementById('new-qty-xl').value = '';
+        document.getElementById('new-img').value = ''; document.getElementById('new-desc').value = '';
+        
+        loadProductsFromDB();
+    } catch (error) { alert("ГРЕШКА ПРИ КАЧВАНЕ:\n" + error.message); } 
+    finally { const btn = document.getElementById('add-btn'); btn.innerText = "+ ДОБАВИ ПРОДУКТ"; btn.disabled = false; }
+});
+
+// --- ZOOM ЕФЕКТ С МИШКАТА В МОДАЛА ---
+const zoomContainer = document.querySelector('.pm-left');
+const zoomImg = document.getElementById('pm-img');
+
+zoomContainer.addEventListener('mousemove', (e) => {
+    const rect = zoomContainer.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xPercent = (x / rect.width) * 100;
+    const yPercent = (y / rect.height) * 100;
+    zoomImg.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+});
+
+zoomContainer.addEventListener('mouseleave', () => {
+    zoomImg.style.transformOrigin = 'center center';
+});
+
+// Глобална променлива, която ще помни кое ID редактираме в момента
+let editingProductId = null; 
+
+// ==========================================
+// 1. ФУНКЦИЯ ЗА ИЗТРИВАНЕ
+// ==========================================
+window.deleteProduct = async function(id) {
+    if(confirm("⚠️ Сигурен ли си, че искаш да изтриеш този продукт завинаги?")) {
+        try {
+            await deleteDoc(doc(db, "products", id));
+            alert("✅ Продуктът е изтрит успешно!");
+            loadProductsFromDB(); // Презареждаме каталога
+        } catch(error) {
+            alert("❌ Грешка при изтриване: " + error.message);
+        }
+    }
+};
+
+// ==========================================
+// 2. ФУНКЦИЯ ЗА ЗАРЕЖДАНЕ НА ДАННИ В МОДАЛА
+// ==========================================
+window.editProduct = function(id) {
+    // Намираме конкретния продукт от масива
+    const product = allProducts.find(p => p.id === id);
+    if(!product) return;
+
+    editingProductId = id; // Запазваме ID-то
+
+    // Попълваме старите данни във формата
+    document.getElementById('edit-title').value = product.title || "";
+    document.getElementById('edit-price').value = product.price || 0;
+    document.getElementById('edit-discount').value = product.discount || 0;
+    
+    // Ако продуктът няма размери, слагаме 0 по подразбиране
+    const sizes = product.sizes || {S: 0, M: 0, L: 0, XL: 0};
+    document.getElementById('edit-qty-s').value = sizes.S || 0;
+    document.getElementById('edit-qty-m').value = sizes.M || 0;
+    document.getElementById('edit-qty-l').value = sizes.L || 0;
+    document.getElementById('edit-qty-xl').value = sizes.XL || 0;
+    
+    document.getElementById('edit-img').value = product.img || "";
+    document.getElementById('edit-desc').value = product.description || "";
+
+    // Показваме модала
+    document.getElementById('editModal').style.display = 'flex';
+};
+
+// ==========================================
+// 3. ФУНКЦИЯ ЗА ЗАПАЗВАНЕ НА ПРОМЕНИТЕ (UPDATE)
+// ==========================================
+window.saveEditProduct = async function() {
+    if(!editingProductId) return;
+
+    // Събираме новите данни от формата
+    const updatedData = {
+        title: document.getElementById('edit-title').value,
+        price: Number(document.getElementById('edit-price').value),
+        discount: Number(document.getElementById('edit-discount').value),
+        img: document.getElementById('edit-img').value,
+        description: document.getElementById('edit-desc').value,
+        sizes: {
+            S: Number(document.getElementById('edit-qty-s').value),
+            M: Number(document.getElementById('edit-qty-m').value),
+            L: Number(document.getElementById('edit-qty-l').value),
+            XL: Number(document.getElementById('edit-qty-xl').value)
+        }
+    };
+
+    // Преизчисляваме общата бройка
+    updatedData.qty = updatedData.sizes.S + updatedData.sizes.M + updatedData.sizes.L + updatedData.sizes.XL;
+
+    try {
+        const btn = document.querySelector("#editModal button");
+        btn.innerText = "⏳ ЗАПАЗВАНЕ...";
+        
+        // Пращаме обновените данни към Firebase
+        await updateDoc(doc(db, "products", editingProductId), updatedData);
+        
+        alert("✅ Промените са запазени успешно!");
+        closeEditModal();
+        loadProductsFromDB(); // Презареждаме каталога с новите данни
+        
+        btn.innerText = "💾 ЗАПАЗИ ПРОМЕНИТЕ";
+    } catch(error) {
+        alert("❌ Грешка при запазване: " + error.message);
+    }
+};
+
+// Затваряне на модала
+window.closeEditModal = function() {
+    document.getElementById('editModal').style.display = 'none';
+    editingProductId = null;
+};
