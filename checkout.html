@@ -25,11 +25,11 @@
                 <div style="display:flex; gap:15px;">
                     <div style="flex:1;">
                         <label>Име и Фамилия</label>
-                        <input type="text" id="order-name" class="premium-input" placeholder="Иван Иванов" required pattern="^[^0-9]+$" title="Моля, въведете само букви.">
+                        <input type="text" id="order-name" class="premium-input" placeholder="Иван Иванов" required>
                     </div>
                     <div style="flex:1;">
                         <label>Телефон</label>
-                        <input type="tel" id="order-phone" class="premium-input" placeholder="0888 123 456" required minlength="10" maxlength="10" title="Телефонът трябва да съдържа точно 10 цифри.">
+                        <input type="tel" id="order-phone" class="premium-input" placeholder="0888 123 456" required>
                     </div>
                 </div>
 
@@ -118,28 +118,6 @@
         }
 
         renderCheckoutCart();
-
-        const nameInput = document.getElementById('order-name');
-        const phoneInput = document.getElementById('order-phone');
-
-        if (nameInput && phoneInput) {
-            // Защита за ИМЕ: Забранява въвеждането на цифри
-            nameInput.addEventListener('input', function() {
-                // Изтрива всяка цифра мигновено
-                this.value = this.value.replace(/[0-9]/g, ''); 
-            });
-
-            // Защита за ТЕЛЕФОН: Само цифри, точно 10 символа
-            phoneInput.addEventListener('input', function() {
-                // Първо изтрива всичко, което не е цифра (букви, символи, интервали)
-                this.value = this.value.replace(/[^0-9]/g, ''); 
-                
-                // След това реже дължината, ако е повече от 10
-                if (this.value.length > 10) {
-                    this.value = this.value.slice(0, 10);
-                }
-            });
-        }
 
         document.getElementById('checkout-form').addEventListener('submit', async (e) => {
             e.preventDefault();
