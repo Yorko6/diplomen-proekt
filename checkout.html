@@ -25,11 +25,11 @@
                 <div style="display:flex; gap:15px;">
                     <div style="flex:1;">
                         <label>Име и Фамилия</label>
-                        <input type="text" id="order-name" class="premium-input" placeholder="Иван Иванов" required>
+                        <input type="text" id="order-name" class="premium-input" placeholder="Иван Иванов" required pattern="^[^0-9]+$" title="Моля, въведете само букви.">
                     </div>
                     <div style="flex:1;">
                         <label>Телефон</label>
-                        <input type="tel" id="order-phone" class="premium-input" placeholder="0888 123 456" required>
+                        <input type="tel" id="order-phone" class="premium-input" placeholder="0888 123 456" required minlength="10" maxlength="10" title="Телефонът трябва да съдържа точно 10 цифри.">
                     </div>
                 </div>
 
@@ -76,7 +76,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        // ВАЖНО: Добавихме doc, getDoc и updateDoc за да можем да променяме наличностите
+        
         import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
@@ -119,7 +119,29 @@
 
         renderCheckoutCart();
 
-        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+        const nameInput = document.getElementById('order-name');
+        const phoneInput = document.getElementById('order-phone');
+
+        if (nameInput && phoneInput) {
+            //zabranqvam da se vuvejdat cifri v imeto
+            nameInput.addEventListener('input', function() {
+                //iztriva cifrite
+                this.value = this.value.replace(/[0-9]/g, ''); 
+            });
+
+            // telefon- tochno 10 simvola
+            phoneInput.addEventListener('input', function() {
+            
+                this.value = this.value.replace(/[^0-9]/g, ''); 
+                
+              
+                if (this.value.length > 10) {
+                    this.value = this.value.slice(0, 10);
+                }
+            });
+        }
+
+     document.getElementById('checkout-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(cart.length === 0) return alert("Нямате продукти в количката!");
 
@@ -140,41 +162,13 @@
             };
 
             try {
-                // 1. ЗАПИСВАМЕ ПОРЪЧКАТА В БАЗАТА
+                
                 await addDoc(collection(db, "orders"), orderData);
 
-                // 2. 🪄 МАГИЯТА: НАМАЛЯВАМЕ НАЛИЧНОСТИТЕ С 1
-                for (const item of cart) {
-                    // Взимаме истинското ID на продукта (в количката му бяхме добавили времеви печат, затова го режем)
-                    const originalProductId = String(item.id).split('-')[0];
-                    const productRef = doc(db, "products", originalProductId);
-                    const productSnap = await getDoc(productRef);
-                    
-                    if (productSnap.exists()) {
-                        let dbData = productSnap.data();
-                        let size = item.size ? item.size.toLowerCase() : ''; 
-                        
-                         
-                        // скриптът е "умен" и сам търси кое от всичките съществува:
-                        let fieldToUpdate = '';
-                        if (dbData['qty' + size.toUpperCase()] !== undefined) fieldToUpdate = 'qty' + size.toUpperCase(); // Търси qtyS
-                        else if (dbData['qty_' + size] !== undefined) fieldToUpdate = 'qty_' + size; // Търси qty_s
-                        else if (dbData['qty-' + size] !== undefined) fieldToUpdate = 'qty-' + size; // Търси qty-s
-                        else if (dbData['qty'] !== undefined) fieldToUpdate = 'qty'; // Търси обща наличност
-
-                        // Ако намери правилното поле и има останали бройки, вади 1
-                        if (fieldToUpdate && dbData[fieldToUpdate] > 0) {
-                            await updateDoc(productRef, {
-                                [fieldToUpdate]: dbData[fieldToUpdate] - 1
-                            });
-                        }
-                    }
-                }
-
-                // 3. ИЗЧИСТВАМЕ КОЛИЧКАТА
+                
                 localStorage.removeItem('myShoppingCart'); 
                 
-                // 4. МАЗНАТА АНИМАЦИЯ ЗА УСПЕХ
+               
                 btn.innerHTML = "✅ ПОРЪЧКАТА Е ПРИЕТА!";
                 btn.style.background = "linear-gradient(135deg, #00e676, #00b259)";
                 btn.style.boxShadow = "0 4px 20px rgba(0, 230, 118, 0.4)";
