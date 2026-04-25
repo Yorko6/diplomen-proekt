@@ -1,13 +1,11 @@
-/* =========================================
-   === 1. ГЛОБАЛНИ СТИЛОВЕ И ОСНОВА ===
-========================================= */
+/* osnova */
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
 body { background-color: #0d0d12; color: #e0e0e0; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; }
 
-/* =========================================
-   === 2. ХЕДЪР И МЕНЮ ===
-========================================= */
+/* headera i menuto */
+
 header { display: flex; justify-content: space-between; padding: 15px 40px; background: rgba(13, 13, 18, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); position: sticky; top: 0; z-index: 1000; }
 .logo { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1px; }
 .logo span { color: #d000ff; }
@@ -18,70 +16,17 @@ header { display: flex; justify-content: space-between; padding: 15px 40px; back
 
 .cart-count-badge { background-color: #ff007f; color: white; border-radius: 50%; padding: 2px 7px; font-size: 11px; position: absolute; top: -8px; right: -8px; display: none; font-weight: bold; box-shadow: 0 2px 5px rgba(255,0,127,0.5); }
 
-/* =========================================
-   === 3. УНИВЕРСАЛНИ БУТОНИ И ПОЛЕТА ===
-========================================= */
+/* butoni i poleta */
 .auth-btn-filled { background: linear-gradient(135deg, #d000ff, #ff007f); color: white !important; border: none; padding: 10px 25px; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 14px; text-transform: uppercase; transition: 0.3s; box-shadow: 0 4px 15px rgba(208, 0, 255, 0.4); }
 .auth-btn-filled:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 0, 127, 0.6); }
 
-/* --- ГЛОБАЛНИ СТИЛОВЕ ЗА ВСИЧКИ ПОЛЕТА, ОПИСАНИЯ И МЕНЮТА --- */
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-textarea,
-select {
-    width: 100%;
-    padding: 14px 15px;
-    background-color: #15151e !important; /* Тъмен матов фон */
-    color: #ffffff !important; /* Кристално бял текст */
-    border: 1px solid #333333 !important; /* Тъмна рамка */
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-    font-size: 15px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    transition: all 0.3s ease;
-}
-
-/* Специално за падащите менюта - да са тъмни отвътре, като ги цъкнеш */
-select option {
-    background-color: #15151e !important;
-    color: #ffffff !important;
-}
-
-/* Специално за описанието - да е малко по-високо и да може да се разтяга */
-textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-/* Когато цъкнеш вътре да пишеш или избираш (Focus) */
-input[type="text"]:focus,
-input[type="number"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-textarea:focus,
-select:focus {
-    outline: none !important;
-    border-color: #d000ff !important; /* Лилавият неон */
-    box-shadow: 0 0 10px rgba(208, 0, 255, 0.2) !important;
-    background-color: #1a1a24 !important;
-}
-
-/* Подсказките вътре в полетата */
-input::placeholder,
-textarea::placeholder {
-    color: #666666 !important;
-}
+.premium-input { width: 100%; padding: 14px; background: #1a1a24; color: #fff; border: 1px solid #2a2a36; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-family: 'Poppins', sans-serif; transition: all 0.3s ease; box-sizing: border-box; }
+.premium-input:focus { outline: none; background: #15151e; border-color: #d000ff; box-shadow: 0 0 15px rgba(208, 0, 255, 0.2); }
 
 .hero-btn { background: linear-gradient(135deg, #d000ff, #ff007f); color: white; padding: 18px 45px; text-decoration: none; font-size: 16px; font-weight: 700; border-radius: 30px; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(208, 0, 255, 0.4); text-transform: uppercase; border: none; cursor: pointer; }
 .hero-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(255, 0, 127, 0.6); }
 
-/* =========================================
-   === 4. НАЧАЛНА СТРАНИЦА (HOME) ===
-========================================= */
+/* Home stranica */
 .hero-section { height: 85vh; display: flex; align-items: center; justify-content: center; text-align: center; background: linear-gradient(to bottom, rgba(13, 13, 18, 0.7), #0d0d12), url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover; padding: 0 20px; margin-top: -80px; padding-top: 80px; }
 .hero-content h1 { font-size: 65px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(135deg, #ffffff, #d000ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 2px; }
 .hero-content p { font-size: 18px; color: #cccccc; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6; }
@@ -93,9 +38,8 @@ textarea::placeholder {
 .feature-box h3 { font-size: 20px; color: #fff; margin-bottom: 12px; font-weight: 600; }
 .feature-box p { color: #888; font-size: 14px; line-height: 1.6; }
 
-/* =========================================
-   === 5. МАГАЗИН И ПРОДУКТИ (SHOP) ===
-========================================= */
+/* Shop */
+
 .categories { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
 button.cat-btn { background-color: #1a1a24 !important; color: #aaa !important; border: 1px solid #2a2a36 !important; padding: 12px 25px !important; border-radius: 30px !important; font-weight: 600 !important; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; }
 button.cat-btn:hover { background-color: #2a2a36 !important; color: #fff !important; transform: translateY(-2px); }
@@ -118,9 +62,8 @@ button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !i
 .open-modal-btn { background: #1a1a24; color: #fff; border: 1px solid #d000ff; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Poppins', sans-serif; transition: all 0.3s; margin-top: 10px; }
 .open-modal-btn:hover { background: #d000ff; color: white; box-shadow: 0 4px 15px rgba(208,0,255,0.4); }
 
-/* =========================================
-   === 6. МОДАЛ ЗА ДЕТАЙЛИ ===
-========================================= */
+/* detaili */
+
 .modal-overlay { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
 .modal-content { background-color: #15151e; margin: 5% auto; padding: 20px; border: 1px solid rgba(255,255,255,0.05); width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: #f0f0f0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
 .close-modal { position: absolute; top: 15px; right: 20px; color: #888; font-size: 28px; cursor: pointer; z-index: 100; transition: 0.3s; }
@@ -141,9 +84,7 @@ button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !i
 #add-to-cart-btn { background: linear-gradient(135deg, #00c6ff, #0072ff); color: white; border: none; padding: 16px; font-weight: 700; cursor: pointer; width: 100%; border-radius: 30px; font-size: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4); font-family: 'Poppins', sans-serif; }
 #add-to-cart-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 114, 255, 0.6); }
 
-/* =========================================
-   === 7. ПРЕМИУМ ЧЕКАУТ ===
-========================================= */
+/* Checkout */
 .checkout-container { display: flex; max-width: 1200px; margin: 50px auto; padding: 0 20px; gap: 40px; align-items: flex-start; }
 .checkout-form-section { flex: 2; background: #15151e; padding: 40px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
 .checkout-form-section h2 { color: #fff; margin-top: 0; margin-bottom: 25px; font-size: 24px; border-bottom: 1px solid #2a2a36; padding-bottom: 15px; }
@@ -162,9 +103,7 @@ button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !i
 .checkout-total { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 2px dashed #333; font-weight: bold; font-size: 18px; color: #fff; }
 .checkout-total #checkout-total-price { color: #ff007f; font-size: 26px; text-shadow: 0 0 10px rgba(255, 0, 127, 0.4); }
 
-/* =========================================
-   === 8. ВХОД / РЕГИСТРАЦИЯ ===
-========================================= */
+/* Vhod i register */
 .auth-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 20px; }
 .auth-box { background: #15151e; padding: 40px; width: 100%; max-width: 420px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
 .auth-tabs { display: flex; margin-bottom: 30px; background: #1a1a24; border-radius: 30px; padding: 5px; }
@@ -172,9 +111,7 @@ button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !i
 .auth-tab:hover { color: #fff; }
 .auth-tab.active { background: linear-gradient(135deg, #d000ff, #ff007f); color: white; box-shadow: 0 4px 15px rgba(208, 0, 255, 0.4); }
 
-/* =========================================
-   === 9. АДМИН ПАНЕЛ ===
-========================================= */
+/* Admin panela */
 .admin-dashboard { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
 .order-card { background: #15151e; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 25px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-family: 'Poppins', sans-serif; }
 .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a36; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; font-size: 14px; }
@@ -188,18 +125,14 @@ button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !i
 .del-order-btn { background: #ff1744; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Poppins', sans-serif; transition: 0.3s; }
 .del-order-btn:hover { background: #d50000; box-shadow: 0 4px 15px rgba(255, 23, 68, 0.4); }
 
-/* =========================================
-   === 10. TOAST ИЗВЕСТИЯ ===
-========================================= */
+/* Izvestiq */
 #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
 .toast { background: rgba(21, 21, 30, 0.95); backdrop-filter: blur(10px); border-left: 4px solid #d000ff; color: #fff; padding: 16px 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 12px; transform: translateX(120%); animation: slideIn 0.4s forwards, slideOut 0.4s forwards 2.6s; }
 .toast.success { border-left-color: #00e676; } .toast.success i { color: #00e676; }
 .toast.error { border-left-color: #ff1744; } .toast.error i { color: #ff1744; }
 @keyframes slideIn { to { transform: translateX(0); } } @keyframes slideOut { to { transform: translateX(150%); opacity: 0; } }
 
-/* =========================================
-   === 📱 11. МОБИЛНА ВЕРСИЯ (RESPONSIVE) ===
-========================================= */
+/* Responsive */
 @media (max-width: 768px) {
     header { flex-direction: column; padding: 15px; gap: 15px; }
     .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
@@ -235,4 +168,56 @@ button.cat-btn.active { background: linear-gradient(135deg, #d000ff, #ff007f) !i
     .toast { animation: slideInTop 0.4s forwards, slideOutTop 0.4s forwards 2.6s; }
     @keyframes slideInTop { from { transform: translateY(-100px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
     @keyframes slideOutTop { to { transform: translateY(-100px); opacity: 0; } }
+}
+/* Redakciq na produkti */
+
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    width: 100%;
+    padding: 14px 15px;
+    background-color: #15151e !important; 
+    color: #ffffff !important;
+    border: 1px solid #333333 !important; 
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+
+select option {
+    background-color: #15151e !important;
+    color: #ffffff !important;
+}
+
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    border-color: #d000ff !important; 
+    box-shadow: 0 0 10px rgba(208, 0, 255, 0.2) !important;
+    background-color: #1a1a24 !important;
+}
+
+
+input::placeholder,
+textarea::placeholder {
+    color: #666666 !important;
 }
