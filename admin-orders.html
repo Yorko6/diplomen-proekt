@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bg">
 <head>
@@ -29,7 +30,7 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        // ВАЖНО: Тук сме импортирали абсолютно всичко нужно (включително getDoc)
+        
         import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -41,7 +42,7 @@
         
         const ADMIN_EMAIL = "admin@fashion.com";
 
-        // ПРОВЕРКА ЗА ДОСТЪП
+        // proverka za dostup
         onAuthStateChanged(auth, (user) => {
             if (!user || user.email !== ADMIN_EMAIL) {
                 alert("⛔ Достъпът е забранен! Само за администратори.");
@@ -53,7 +54,7 @@
             }
         });
 
-        // ДЪРПАНЕ НА ПОРЪЧКИТЕ
+        // vzemane na poruchkite
         async function loadOrders() {
             const container = document.getElementById('orders-container');
             container.innerHTML = '';
@@ -132,77 +133,60 @@
             }
         }
 
-        // ФУНКЦИЯТА, КОЯТО НАМАЛЯВА НАЛИЧНОСТИТЕ И ТРИЕ
         window.updateOrderStatus = async function(id, newStatus, selectElement) {
-            try {
-                if (newStatus === 'Доставена') {
-                    if(!confirm("Сигурен ли си? Това ще намали наличностите с 1 и ще изтрие поръчката!")) {
-                        selectElement.value = selectElement.getAttribute('data-old-value'); 
-                        return;
-                    }
+    try {
+        const orderRef = doc(db, "orders", id);
 
-                    // 1. Взимаме поръчката
-                    const orderRef = doc(db, "orders", id);
-                    const orderSnap = await getDoc(orderRef);
+        
+        if (newStatus.includes('Доставена')) {
+            if(!confirm("Сигурен ли си? Поръчката ще бъде маркирана като доставена и изтрита от списъка!")) {
 
-                    if (orderSnap.exists()) {
-                        const orderData = orderSnap.data();
-
-                        // 2. Намаляваме наличностите на дрехите
-                        if (orderData.items) {
-                            for (const item of orderData.items) {
-                                const originalProductId = String(item.id).split('-')[0];
-                                const productRef = doc(db, "products", originalProductId);
-                                const productSnap = await getDoc(productRef);
-
-                                if (productSnap.exists()) {
-                                    let dbData = productSnap.data();
-                                    let size = item.size ? String(item.size).toLowerCase() : '';
-
-                                    let fieldToUpdate = '';
-                                    if (dbData['qty' + size.toUpperCase()] !== undefined) fieldToUpdate = 'qty' + size.toUpperCase();
-                                    else if (dbData['qty_' + size] !== undefined) fieldToUpdate = 'qty_' + size;
-                                    else if (dbData['qty-' + size] !== undefined) fieldToUpdate = 'qty-' + size;
-                                    else if (dbData['qty'] !== undefined) fieldToUpdate = 'qty';
-
-                                    if (fieldToUpdate && dbData[fieldToUpdate] > 0) {
-                                        await updateDoc(productRef, {
-                                            [fieldToUpdate]: dbData[fieldToUpdate] - 1
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // 3. Изтриваме поръчката
-                    await deleteDoc(orderRef);
-                    loadOrders(); 
-                    setTimeout(() => alert("✅ Поръчката е успешно доставена и инвентарът е намален!"), 300);
-
-                } else {
-                    // АКО СМЕНЯМЕ САМО СТАТУСА (Без да трием)
-                    await updateDoc(doc(db, "orders", id), { status: newStatus });
-                    selectElement.setAttribute('data-old-value', newStatus); 
-                    
-                    let statusColor = newStatus === 'Нова' ? '#00c6ff' : '#d000ff';
-                    selectElement.style.borderColor = statusColor;
-                    selectElement.style.color = statusColor;
-                }
-            } catch (e) { 
-                console.error("ТЕХНИЧЕСКА ГРЕШКА:", e); 
-                alert("Грешка в системата: " + e.message); 
+                selectElement.value = selectElement.getAttribute('data-old-value'); 
+                return;
             }
-        }
 
-        window.deleteOrder = async function(id) {
-            if(confirm("Сигурен ли си, че искаш да изтриеш тази поръчка завинаги?")) {
-                try {
-                    await deleteDoc(doc(db, "orders", id));
-                    loadOrders(); 
-                } catch (e) { alert("Грешка при изтриване!"); }
+            
+            await deleteDoc(orderRef);
+            
+            
+            if (typeof loadOrders === 'function') {
+                loadOrders(); 
+            } else {
+                location.reload(); 
             }
+            
+            setTimeout(() => alert("✅ Поръчката е успешно изтрита!"), 300);
+
+        } else {
+  
+            await updateDoc(orderRef, { status: newStatus });
+            
+            
+            selectElement.setAttribute('data-old-value', newStatus); 
+            
+         
+            let statusColor = newStatus === 'Нова' ? '#00c6ff' : '#d000ff';
+            selectElement.style.borderColor = statusColor;
+            selectElement.style.color = statusColor;
         }
+    } catch (e) { 
+        console.error("ТЕХНИЧЕСКА ГРЕШКА:", e); 
+        alert("Грешка в системата: " + e.message);
+        selectElement.value = selectElement.getAttribute('data-old-value'); 
+    }
+};
+
+
+window.deleteOrder = async function(id) {
+    if(confirm("Сигурен ли си, че искаш да изтриеш тази поръчка завинаги?")) {
+        try {
+            await deleteDoc(doc(db, "orders", id));
+            if (typeof loadOrders === 'function') loadOrders(); 
+        } catch (e) { 
+            alert("Грешка при изтриване!"); 
+        }
+    }
+}
     </script>
 </body>
 </html>
