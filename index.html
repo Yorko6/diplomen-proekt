@@ -1,48 +1,192 @@
+
 <!DOCTYPE html>
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fashion Store - Начало</title>
+    <title>Админ Панел - Поръчки</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header>
-        <div class="logo">Fashion<span>Store</span></div>
+        <div class="logo">Fashion<span style="color:#d000ff;">Admin</span></div>
         <div class="nav-links">
-            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> Начало</a>
-            <a href="shop.html" class="nav-btn"><i class="fas fa-tshirt"></i> Магазин</a>
-            <a href="login.html" id="auth-btn" class="auth-btn-filled">Вход</a>
+            <a href="shop.html" class="nav-btn"><i class="fas fa-store"></i> <span class="desk-text">Към Магазина</span></a>
         </div>
     </header>
+    
+    <div class="admin-dashboard" id="main-admin-content" style="display: none;">
+        <h1 style="text-align:center; margin-bottom: 30px; color: #fff;">Управление на Поръчки 📦</h1>
+        <div id="orders-container">
+            <p style="text-align:center; color:#888;">Зареждане на поръчките...</p>
+        </div>
+    </div>
 
-    <section class="hero-section">
-        <div class="hero-content">
-            <h1>Новата колекция е тук.</h1>
-            <p>Премиум стрийтуеър дрехи за хора, които не се страхуват да се отличават. Открий своя стил днес.</p>
-            <a href="shop.html" class="hero-btn">ПАЗАРУВАЙ СЕГА <i class="fas fa-arrow-right"></i></a>
-        </div>
-    </section>
+    <div id="loading-auth" style="text-align:center; margin-top: 100px; color: #d000ff; font-size: 20px;">
+        <i class="fas fa-spinner fa-spin"></i> Проверка на достъпа...
+    </div>
 
-    <section class="features-section">
-        <div class="feature-box">
-            <i class="fas fa-shipping-fast"></i>
-            <h3>Експресна доставка</h3>
-            <p>Получаваш пратката си на следващия работен ден.</p>
-        </div>
-        <div class="feature-box">
-            <i class="fas fa-undo-alt"></i>
-            <h3>Лесно връщане</h3>
-            <p>Имаш 14 дни да върнеш продукта без излишни въпроси.</p>
-        </div>
-        <div class="feature-box">
-            <i class="fas fa-lock"></i>
-            <h3>Сигурно плащане</h3>
-            <p>100% защитени транзакции и опция за наложен платеж.</p>
-        </div>
-    </section>
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // ТВОЯТ FIREBASE
+        const firebaseConfig = { apiKey: "AIzaSyCEu5mpMHT7REOcHk9LiHCOyqzbfahFqB0", authDomain: "magazine-9e774.firebaseapp.com", projectId: "magazine-9e774", storageBucket: "magazine-9e774.firebasestorage.app", messagingSenderId: "865604014690", appId: "1:865604014690:web:11aa52fa2c8f34b462373b" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const ADMIN_EMAIL = "admin@fashion.com";
+
+        // proverka za dostup
+        onAuthStateChanged(auth, (user) => {
+            if (!user || user.email !== ADMIN_EMAIL) {
+                alert("⛔ Достъпът е забранен! Само за администратори.");
+                window.location.href = "index.html";
+            } else {
+                document.getElementById('loading-auth').style.display = 'none';
+                document.getElementById('main-admin-content').style.display = 'block';
+                loadOrders(); 
+            }
+        });
+
+        // vzemane na poruchkite
+        async function loadOrders() {
+            const container = document.getElementById('orders-container');
+            container.innerHTML = '';
+            
+            try {
+                const q = query(collection(db, "orders"), orderBy("date", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p style="text-align:center; color:#fff;">Все още няма направени поръчки.</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    let order = docSnap.data();
+                    let orderId = docSnap.id;
+                    let dateStr = new Date(order.date).toLocaleString('bg-BG');
+
+                    let itemsHtml = '';
+                    order.items.forEach(item => {
+                        itemsHtml += `
+                            <li>
+                                <img src="${item.img}" alt="img">
+                                <div>
+                                    <div style="color:#fff; font-size:13px; font-weight:bold;">${item.title}</div>
+                                    <div style="color:#aaa; font-size:12px;">Размер: ${item.size} | ${item.price} €</div>
+                                </div>
+                            </li>
+                        `;
+                    });
+
+                    let statusColor = order.status === 'Нова' ? '#00c6ff' : (order.status === 'Изпратена' ? '#d000ff' : '#00e676');
+
+                    const html = `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div><strong style="color:#aaa;">ID:</strong> ${orderId}</div>
+                                <div><strong style="color:#aaa;">Дата:</strong> ${dateStr}</div>
+                                <div>
+                                    <select class="status-select" data-old-value="${order.status}" style="border-color:${statusColor}; color:${statusColor};" onchange="updateOrderStatus('${orderId}', this.value, this)">
+                                        <option value="Нова" ${order.status === 'Нова' ? 'selected' : ''}>🔵 Нова</option>
+                                        <option value="Изпратена" ${order.status === 'Изпратена' ? 'selected' : ''}>🟣 Изпратена</option>
+                                        <option value="Доставена" ${order.status === 'Доставена' ? 'selected' : ''}>🟢 Доставена (Изтрива)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="order-info">
+                                <div class="order-customer">
+                                    <h3 style="color:#fff; margin-top:0; margin-bottom:15px;">Клиент</h3>
+                                    <p>👤 <strong>Име:</strong> ${order.name}</p>
+                                    <p>📞 <strong>Телефон:</strong> ${order.phone}</p>
+                                    <p>🏙️ <strong>Град:</strong> ${order.city}</p>
+                                    <p>📍 <strong>Адрес:</strong> ${order.address}</p>
+                                    <p>💳 <strong>Плащане:</strong> ${order.payment === 'cash' ? 'Наложен платеж' : 'Карта'}</p>
+                                </div>
+                                
+                                <div class="order-items">
+                                    <h3 style="color:#fff; margin-top:0; margin-bottom:15px;">Продукти</h3>
+                                    <ul>${itemsHtml}</ul>
+                                    <div style="text-align:right; margin-top:10px; font-size:18px; font-weight:bold; color:#d000ff;">
+                                        Общо: ${order.total}
+                                    </div>
+                                    <div class="action-btns" style="justify-content: flex-end;">
+                                        <button class="del-order-btn" onclick="deleteOrder('${orderId}')">🗑️ ИЗТРИЙ ПОРЪЧКАТА</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+
+            } catch (error) {
+                container.innerHTML = `<p style="color:red;">Грешка: ${error.message}</p>`;
+            }
+        }
+
+        window.updateOrderStatus = async function(id, newStatus, selectElement) {
+    try {
+        const orderRef = doc(db, "orders", id);
+
+        
+        if (newStatus.includes('Доставена')) {
+            if(!confirm("Сигурен ли си? Поръчката ще бъде маркирана като доставена и изтрита от списъка!")) {
+
+                selectElement.value = selectElement.getAttribute('data-old-value'); 
+                return;
+            }
+
+            
+            await deleteDoc(orderRef);
+            
+            
+            if (typeof loadOrders === 'function') {
+                loadOrders(); 
+            } else {
+                location.reload(); 
+            }
+            
+            setTimeout(() => alert("✅ Поръчката е успешно изтрита!"), 300);
+
+        } else {
+  
+            await updateDoc(orderRef, { status: newStatus });
+            
+            
+            selectElement.setAttribute('data-old-value', newStatus); 
+            
+         
+            let statusColor = newStatus === 'Нова' ? '#00c6ff' : '#d000ff';
+            selectElement.style.borderColor = statusColor;
+            selectElement.style.color = statusColor;
+        }
+    } catch (e) { 
+        console.error("ТЕХНИЧЕСКА ГРЕШКА:", e); 
+        alert("Грешка в системата: " + e.message);
+        selectElement.value = selectElement.getAttribute('data-old-value'); 
+    }
+};
+
+
+window.deleteOrder = async function(id) {
+    if(confirm("Сигурен ли си, че искаш да изтриеш тази поръчка завинаги?")) {
+        try {
+            await deleteDoc(doc(db, "orders", id));
+            if (typeof loadOrders === 'function') loadOrders(); 
+        } catch (e) { 
+            alert("Грешка при изтриване!"); 
+        }
+    }
+}
+    </script>
 </body>
 </html>
