@@ -29,52 +29,70 @@ onAuthStateChanged(auth, (user) => {
             authBtn.href = "#"; // Махаме линка, за да не го праща никъде при изход
         }
         
-        // 2. ПРОВЕРКА ЗА АДМИН
+        // proverqva za admnin
         if(user.email === ADMIN_EMAIL) {
-            // Ако е шефът -> Показваме тайните неща (ако ги има на страницата)
+            // Ako e admin, pokazva menuto za admini
             if (adminPanel) adminPanel.style.display = 'block';
             if (adminBadge) adminBadge.style.display = 'inline-block';
         } else {
-            // АКО Е ОБИКНОВЕН КЛИЕНТ -> Твърдо КРИЕМ админ панела! (Тук ти беше пропускът)
+            // Аko ne e nishto ne se pokazva
             if (adminPanel) adminPanel.style.display = 'none';
             if (adminBadge) adminBadge.style.display = 'none';
         }
         
     } else {
-        // АКО НЯМА ВЛЯЗЪЛ ЧОВЕК (ГОСТ)
+        // ako nqma log-nat chovek
         currentUser = null;
         
-        // 1. Връщаме бутона на ВХОД
+        
         if(authBtn) { 
             authBtn.innerText = "ВХОД"; 
             authBtn.href = "login.html"; 
             authBtn.onclick = null; 
         }
         
-        // 2. Твърдо КРИЕМ админ панела за гости
+        
         if (adminPanel) adminPanel.style.display = 'none';
         if (adminBadge) adminBadge.style.display = 'none';
     }
 
-    // Зареждаме продуктите и количката
+    // zarejda produktite ot kolichkata
     if (typeof loadProductsFromDB === "function") loadProductsFromDB(); 
     if (typeof window.updateCartCount === "function") window.updateCartCount();
 });
 
 window.applyFilters = function() {
-    let filtered = allProducts;
-    if (state.gender !== 'all') { filtered = filtered.filter(p => p.gender === state.gender || p.gender === 'unisex' || !p.gender); }
-    if (state.category !== 'all') { filtered = filtered.filter(p => p.category === state.category); }
-    if (state.search !== '') { filtered = filtered.filter(p => p.title.toLowerCase().includes(state.search)); }
+    let filtered = [...allProducts]; 
 
-    filtered.sort((a, b) => {
-        let realPriceA = a.discount > 0 ? a.price - (a.price * (a.discount / 100)) : a.price;
-        let realPriceB = b.discount > 0 ? b.price - (b.price * (b.discount / 100)) : b.price;
-        if (state.sort === 'price-asc') return realPriceA - realPriceB;
-        if (state.sort === 'price-desc') return realPriceB - realPriceA;
-        return 0; 
-    });
+    // 1. filtur po pol,kategoriq i tursachka
+    if (state.gender !== 'all') { 
+        filtered = filtered.filter(p => p.gender === state.gender || p.gender === 'unisex' || !p.gender); 
+    }
+    if (state.category !== 'all') { 
+        filtered = filtered.filter(p => p.category === state.category); 
+    }
+    if (state.search !== '') { 
+        filtered = filtered.filter(p => p.title.toLowerCase().includes(state.search)); 
+    }
 
+    // 2. sortirane po edin ot 3te nachina
+    if (state.sort === 'default') {
+        
+        filtered.reverse();
+    } else {
+        
+        filtered.sort((a, b) => {
+            
+            let realPriceA = a.discount > 0 ? a.price - (a.price * (a.discount / 100)) : a.price;
+            let realPriceB = b.discount > 0 ? b.price - (b.price * (b.discount / 100)) : b.price;
+
+            if (state.sort === 'price-asc') return realPriceA - realPriceB;
+            if (state.sort === 'price-desc') return realPriceB - realPriceA;
+            return 0;
+        });
+    }
+
+    
     renderProducts(filtered);
 }
 
@@ -146,9 +164,9 @@ window.openCartModal = function() {
 window.closeCartModal = function() { document.getElementById('cartModal').style.display = 'none'; }
 
 window.openProductModal = function(productOrId) {
-    // Ако бутонът е изпратил само ID (текст), намираме целия продукт от масива
+    
     let product = typeof productOrId === 'string' ? allProducts.find(p => p.id === productOrId) : productOrId;
-    if (!product) return; // Застраховка
+    if (!product) return; 
     currentOpenProduct = product;
     document.getElementById('pm-img').src = product.img;
     document.getElementById('pm-title').innerText = product.title;
@@ -298,21 +316,20 @@ function renderProducts(productsToRender) {
     }
 
     productsToRender.forEach(p => {
-        // 1. Събираме всички бройки от различните размери
+        // 1. vs broiki ot razmerite
         let s = Number(p.qtyS || p.qty_s || p['qty-s'] || p.new_qty_s || 0);
         let m = Number(p.qtyM || p.qty_m || p['qty-m'] || p.new_qty_m || 0);
         let l = Number(p.qtyL || p.qty_l || p['qty-l'] || p.new_qty_l || 0);
         let xl = Number(p.qtyXL || p.qty_xl || p['qty-xl'] || p.new_qty_xl || 0);
         
-        // Смятаме общо колко тениски има останали
+        
         let totalQty = s + m + l + xl;
         
-        // Ако няма размери, а ползваш някакво общо поле qty
         if (totalQty === 0 && p.qty) {
             totalQty = Number(p.qty);
         }
 
-        // 2. Правим готиния бадж за наличност (Зелен/Сив ако има, Червен ако няма)
+        
         let badgeHtml = '';
         if (totalQty > 0) {
             badgeHtml = `<div class="qty-badge" style="background: #1a1a24; color: #aaa; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; position: absolute; top: 15px; right: 15px; z-index: 10; border: 1px solid #333;">Налично: ${totalQty}</div>`;
@@ -320,6 +337,22 @@ function renderProducts(productsToRender) {
             badgeHtml = `<div class="qty-badge" style="background: #ff1744; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; position: absolute; top: 15px; right: 15px; z-index: 10; box-shadow: 0 4px 10px rgba(255, 23, 68, 0.4);">ИЗЧЕРПАНО</div>`;
         }
 
+      
+        let adminButtons = '';
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.email === ADMIN_EMAIL) {
+            adminButtons = `
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button onclick="editProduct('${p.id}')" style="background: #ffa500; color: #000; border: none; padding: 8px; flex: 1; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                        <i class="fas fa-edit"></i> 
+                    </button>
+                    <button onclick="deleteProduct('${p.id}')" style="background: #ff4757; color: #fff; border: none; padding: 8px; flex: 1; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                        <i class="fas fa-trash"></i> 
+                    </button>
+                </div>
+            `;
+        }
+
+        
         const html = `
             <div class="product-card" style="position: relative;">
                 ${badgeHtml}
@@ -332,6 +365,8 @@ function renderProducts(productsToRender) {
                 </div>
                 
                 ${totalQty > 0 ? `<button class="open-modal-btn" onclick="openProductModal('${p.id}')">ВИЖ ОПЦИИ</button>` : `<button class="open-modal-btn" style="background: #333; border-color: #444; color: #888; cursor: not-allowed;" disabled>Няма наличност</button>`}
+                
+                ${adminButtons}
             </div>
         `;
         container.innerHTML += html;
@@ -382,7 +417,7 @@ document.getElementById('add-btn').addEventListener('click', async () => {
     finally { const btn = document.getElementById('add-btn'); btn.innerText = "+ ДОБАВИ ПРОДУКТ"; btn.disabled = false; }
 });
 
-// --- ZOOM ЕФЕКТ С МИШКАТА В МОДАЛА ---
+ // zoom efekt s mishkata
 const zoomContainer = document.querySelector('.pm-left');
 const zoomImg = document.getElementById('pm-img');
 
@@ -398,3 +433,94 @@ zoomContainer.addEventListener('mousemove', (e) => {
 zoomContainer.addEventListener('mouseleave', () => {
     zoomImg.style.transformOrigin = 'center center';
 });
+
+
+//Admin redaktirane i iztrivane 
+
+let editingProductId = null; 
+
+
+window.editProduct = function(id) {
+    console.log("👉 Цъкна бутона РЕДАКТИРАЙ за продукт:", id);
+    
+   
+    const product = allProducts.find(p => p.id === id);
+    if (!product) return console.log("❌ Продуктът не е намерен!");
+
+   
+    document.getElementById('edit-id').value = id;
+
+    
+    document.getElementById('edit-title').value = product.title || "";
+    document.getElementById('edit-price').value = product.price || 0;
+    document.getElementById('edit-discount').value = product.discount || 0;
+    
+    // hvastha vuzmojni imena ot bazata mi
+    document.getElementById('edit-qty-s').value = Number(product.qtyS || product.qty_s || product['qty-s'] || product.new_qty_s || (product.sizes && product.sizes.S) || product.s || 0);
+    document.getElementById('edit-qty-m').value = Number(product.qtyM || product.qty_m || product['qty-m'] || product.new_qty_m || (product.sizes && product.sizes.M) || product.m || 0);
+    document.getElementById('edit-qty-l').value = Number(product.qtyL || product.qty_l || product['qty-l'] || product.new_qty_l || (product.sizes && product.sizes.L) || product.l || 0);
+    document.getElementById('edit-qty-xl').value = Number(product.qtyXL || product.qty_xl || product['qty-xl'] || product.new_qty_xl || (product.sizes && product.sizes.XL) || product.xl || 0);
+    
+    document.getElementById('edit-gender').value = product.gender || "male";
+    document.getElementById('edit-cat').value = product.category || product.cat || "tshirt";
+    document.getElementById('edit-img').value = product.img || "";
+    document.getElementById('edit-desc').value = product.description || product.desc || "";
+
+   
+    document.getElementById('editModal').style.display = 'flex';
+};
+
+// update na firebasea 
+window.saveEditProduct = async function() {
+    if (!editingProductId) return;
+
+    const btn = document.querySelector("#editModal button");
+    btn.innerText = "⏳ ЗАПАЗВАНЕ...";
+
+    try {
+      //subira novite danni
+        const updatedData = {
+            title: document.getElementById('edit-title').value,
+            price: Number(document.getElementById('edit-price').value),
+            discount: Number(document.getElementById('edit-discount').value),
+            qty_s: Number(document.getElementById('edit-qty-s').value),
+            qty_m: Number(document.getElementById('edit-qty-m').value),
+            qty_l: Number(document.getElementById('edit-qty-l').value),
+            qty_xl: Number(document.getElementById('edit-qty-xl').value),
+            gender: document.getElementById('edit-gender').value,
+            category: document.getElementById('edit-cat').value,
+            img: document.getElementById('edit-img').value,
+            description: document.getElementById('edit-desc').value
+        };
+
+       
+        await updateDoc(doc(db, "products", editingProductId), updatedData);
+        
+        alert("✅ Промените са запазени успешно!");
+        document.getElementById('editModal').style.display = 'none';
+        editingProductId = null;
+        btn.innerText = "💾 ЗАПАЗИ ПРОМЕНИТЕ";
+        
+    
+        if(typeof loadProductsFromDB === 'function') loadProductsFromDB();
+        
+    } catch(error) {
+        console.error("Грешка при ъпдейт:", error);
+        alert("❌ Внимание: Промените НЕ се запазиха във Firebase. Провери конзолата.");
+        btn.innerText = "💾 ЗАПАЗИ ПРОМЕНИТЕ";
+    }
+};
+
+// Iztrivane
+window.deleteProduct = async function(id) {
+    if (confirm("⚠️ Сигурен ли си, че искаш да изтриеш този продукт завинаги?")) {
+        try {
+            await deleteDoc(doc(db, "products", id));
+            alert("✅ Продуктът е изтрит успешно!");
+            if(typeof loadProductsFromDB === 'function') loadProductsFromDB();
+        } catch(error) {
+            console.error("Грешка при изтриване:", error);
+            alert("❌ Грешка при изтриване. Провери конзолата.");
+        }
+    }
+};
