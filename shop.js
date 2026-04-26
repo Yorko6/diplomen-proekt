@@ -22,11 +22,11 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         currentUser = user;
         
-        // 1. Сменяме бутона на ИЗХОД
+       
         if(authBtn) { 
             authBtn.innerText = "ИЗХОД"; 
             authBtn.onclick = () => { signOut(auth).then(() => window.location.reload()); }; 
-            authBtn.href = "#"; // Махаме линка, за да не го праща никъде при изход
+            authBtn.href = "#"; 
         }
         
         // proverqva za admnin
